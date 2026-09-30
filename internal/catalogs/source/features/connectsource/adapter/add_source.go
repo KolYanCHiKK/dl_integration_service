@@ -1,3 +1,0 @@
-package adapter
-
-func

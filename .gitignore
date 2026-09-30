@@ -1,0 +1,43 @@
+# Бинарники и библиотеки
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+
+# Тестовые бинарники и покрытие
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# Профилирование
+*.prof
+
+# Vendor
+/vendor/
+
+# Go workspace
+go.work
+go.work.sum
+
+# Переменные окружения и секреты
+.env
+.env.*
+!.env.example
+
+# IDE и редакторы
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ОС
+.DS_Store
+Thumbs.db
+
+# Логи и временные файлы
+*.log
+tmp/

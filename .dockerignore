@@ -1,0 +1,46 @@
+# Git и CI
+.git
+.gitignore
+.github
+.gitlab-ci.yml
+
+# Секреты и окружение (приходят через env_file при запуске)
+.env
+.env.*
+
+# IDE и редакторы
+.idea
+.vscode
+**/*.swp
+**/*.swo
+
+# ОС
+**/.DS_Store
+**/Thumbs.db
+
+# Результаты сборки и тестов
+bin
+dist
+**/*.exe
+**/*.test
+**/*.out
+coverage.txt
+coverage.html
+**/*.prof
+
+# Go workspace (локальная раскладка, в образе не нужна)
+go.work
+go.work.sum
+
+# Данные и временные файлы
+pgdata
+tmp
+**/*.log
+
+# Docker-файлы (для сборки образа внутри не нужны)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Документация
+**/*.md
