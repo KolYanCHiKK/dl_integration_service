@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/settings/constants"
-	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/settings/types"
+	app2 "github.com/KolYanCHiKK/dl_integration_service/internal/shared/constants/app"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/app"
 )
 
 type envReader struct {
@@ -29,9 +29,9 @@ func (r *envReader) str(key string) string {
 	return v
 }
 
-func (r *envReader) sslRootSert(key string, sslmode types.SSLMode) string {
+func (r *envReader) sslRootSert(key string, sslmode app.SSLMode) string {
 	v := os.Getenv(key)
-	if v == "" && sslmode != constants.Disable {
+	if v == "" && sslmode != app2.SSLModeDisable {
 		r.fail(fmt.Errorf("variable %s is missing", key))
 		return v
 	}

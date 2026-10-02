@@ -1,11 +1,13 @@
 package postgres
 
-import "github.com/KolYanCHiKK/dl_integration_service/configs"
+import (
+	"github.com/KolYanCHiKK/dl_integration_service/pkg/postgres"
+)
 
 type Postgres struct {
-	Db *configs.ApplicationConfig
+	*postgres.Db
 }
 
-func NewPostgres(db *configs.ApplicationConfig) *Postgres {
+func NewPostgres(db *postgres.Db) *Postgres {
 	return &Postgres{Db: db}
 }

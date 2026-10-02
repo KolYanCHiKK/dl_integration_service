@@ -3,12 +3,12 @@ package models
 import (
 	"time"
 
-	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/settings/types"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/user"
 	"gorm.io/datatypes"
 )
 
 type User struct {
-	UserId         types.UserId   `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	UserId         user.UserId    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	Surname        string         `gorm:"type:varchar(100)"`
 	Name           string         `gorm:"type:varchar(100);not null"`
 	LastName       string         `gorm:"type:varchar(100)"`

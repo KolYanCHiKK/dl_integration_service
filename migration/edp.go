@@ -27,7 +27,7 @@ func CreateEdpTables(db *gorm.DB) error {
 			return err
 		}
 
-		logger.CreateOperationLogs("migration", schema)
+		logger.CreateOperationLogs("migration", "schema", schema)
 
 		return nil
 	})

@@ -38,7 +38,7 @@ tmp
 **/*.log
 
 # Docker-файлы (для сборки образа внутри не нужны)
-Dockerfile*
+docker/auth/Dockerfile
 docker-compose*.yml
 .dockerignore
 

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/settings/types"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/app"
 	"github.com/joho/godotenv"
 )
 
@@ -24,9 +24,8 @@ type DBPostgresConfig struct {
 	Password string
 	Name     string
 
-	SSLMode     types.SSLMode // Мод использования сертификатов
-	SSLRootCert string        // Ссылка на файл SSL сертификата
-
+	SSLMode         app.SSLMode   // Мод использования сертификатов
+	SSLRootCert     string        // Ссылка на файл SSL сертификата
 	MaxOpenConn     int           // Максимальное количество открытых соединений
 	MaxIdleConn     int           // Максимальное количество свободных соединений
 	ConnMaxLifetime time.Duration // Максимальный срок жизни одного соединения
@@ -73,8 +72,8 @@ func (c *DBPostgresConfig) RunDbConfigWithEnv() error {
 		Password: r.str("DB_PASSWORD"),
 		Name:     r.str("DB_NAME"),
 
-		SSLMode:     types.SSLMode(r.str("DB_SSL_MODE")),
-		SSLRootCert: r.sslRootSert("DB_SSL_ROOT_CERT", types.SSLMode(r.str("DB_SSL_MODE"))),
+		SSLMode:     app.SSLMode(r.str("DB_SSL_MODE")),
+		SSLRootCert: r.sslRootSert("DB_SSL_ROOT_CERT", app.SSLMode(r.str("DB_SSL_MODE"))),
 
 		MaxOpenConn:     r.int("DB_MAX_OPEN_CONN"),
 		MaxIdleConn:     r.int("DB_MAX_IDLE_CONN"),
