@@ -29,6 +29,21 @@ func (r *envReader) str(key string) string {
 	return v
 }
 
+func (r *envReader) bool(key string) bool {
+	v := os.Getenv(key)
+	if v == "" {
+		r.fail(fmt.Errorf("variable %s is missing", key))
+		return false
+	}
+
+	n, err := strconv.ParseBool(v)
+	if err != nil {
+		r.fail(fmt.Errorf("variable %s: invalid bool %q", key, v))
+		return false
+	}
+	return n
+}
+
 func (r *envReader) sslRootSert(key string, sslmode app.SSLMode) string {
 	v := os.Getenv(key)
 	if v == "" && sslmode != app2.SSLModeDisable {

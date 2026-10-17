@@ -17,7 +17,7 @@ func main() {
 	logger.InitLogger()
 
 	// Добавление конфигов
-	appConfig, err := configs.LoadConfig()
+	appConfig, err := configs.LoadApplicationConfig()
 	if err != nil {
 		logger.CreateErrLog(err.Error(), "Ошибка добавления конфига")
 		return
@@ -48,8 +48,8 @@ func main() {
 	mux := chi.NewMux()
 	logger.CreateOperationLogs("starting_server", "port", "8080")
 
-	// Инициализация и подянтие сервера
-	err = auth.StartIdentityServer(mux, postgres)
+	// Инициализация и поднятие сервера
+	err = auth.StartOauthServer(mux, postgres, appConfig.OauthFosite)
 	if err != nil {
 		logger.CreateErrLog(err.Error(), "Ошибка подготовки запуска сервера")
 		return

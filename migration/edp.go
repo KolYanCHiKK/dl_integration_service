@@ -1,7 +1,7 @@
 package migration
 
 import (
-	connection "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/connection/models"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/models"
 	user "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/models"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
 	"gorm.io/gorm"
@@ -20,9 +20,30 @@ func CreateEdpTables(db *gorm.DB) error {
 		}
 
 		if err := tx.AutoMigrate(
-			&connection.Connection{},
-			&connection.ConnectionAccess{},
 			&user.User{},
+			&user.Role{},
+			&user.UserRole{},
+			&user.LoginSession{},
+
+			&models.Client{},
+			&models.ClientRedirectURI{},
+			&models.ClientGrantType{},
+			&models.ClientResponseType{},
+			&models.ClientScope{},
+			&models.Resource{},
+			&models.ClientResource{},
+			&models.ClientSecretRotation{},
+
+			&models.Request{},
+			&models.RequestScope{},
+			&models.RequestResource{},
+			&models.AuthorizeCode{},
+			&models.AccessToken{},
+			&models.RefreshToken{},
+			&models.PKCERequest{},
+			&models.OIDCSession{},
+			&models.JTIBlacklist{},
+			&models.SigningKey{},
 		); err != nil {
 			return err
 		}
@@ -40,8 +61,30 @@ func DropUsers(db *gorm.DB) error {
 		}
 
 		if err := tx.Migrator().DropTable(
-			&connection.Connection{},
 			&user.User{},
+			&user.Role{},
+			&user.UserRole{},
+			&user.LoginSession{},
+
+			&models.Client{},
+			&models.ClientRedirectURI{},
+			&models.ClientGrantType{},
+			&models.ClientResponseType{},
+			&models.ClientScope{},
+			&models.Resource{},
+			&models.ClientResource{},
+			&models.ClientSecretRotation{},
+
+			&models.Request{},
+			&models.RequestScope{},
+			&models.RequestResource{},
+			&models.AuthorizeCode{},
+			&models.AccessToken{},
+			&models.RefreshToken{},
+			&models.PKCERequest{},
+			&models.OIDCSession{},
+			&models.JTIBlacklist{},
+			&models.SigningKey{},
 		); err != nil {
 			return err
 		}

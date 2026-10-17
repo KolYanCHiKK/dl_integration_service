@@ -9,7 +9,7 @@ import (
 )
 
 type Connection struct {
-	Id                connection.ConnectionId   `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	ID                connection.ConnectionId   `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	Name              string                    `gorm:"size:255;not null"`
 	Type              connection.DBType         `gorm:"size:100;not null;index"`
 	Host              string                    `gorm:"size:255;not null"`
@@ -28,7 +28,7 @@ func (Connection) TableName() string {
 }
 
 type ConnectionAccess struct {
-	Id           connection.ConnectionAccessId `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	ID           connection.ConnectionAccessId `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	ConnectionID connection.ConnectionId       `gorm:"type:uuid;not null;index:conn_user_role_idx,unique"`
 	UserID       userTypes.UserId              `gorm:"type:uuid;not null;index:conn_user_role_idx,unique"`
 	Role         connection.AccessRole         `gorm:"size:100;not null;default:'viewer';index:conn_user_role_idx,unique"`
@@ -36,7 +36,7 @@ type ConnectionAccess struct {
 	CreatedAt    time.Time                     `gorm:"not null;type:timestamptz;autoCreateTime"`
 	UpdatedAt    time.Time                     `gorm:"not null;type:timestamptz;autoUpdateTime"`
 
-	Connection Connection      `gorm:"foreignKey:ConnectionID;references:Id"`
+	Connection Connection      `gorm:"foreignKey:ConnectionID;references:ID"`
 	User       userModels.User `gorm:"foreignKey:UserID;references:ID"`
 }
 

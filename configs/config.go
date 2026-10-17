@@ -11,11 +11,13 @@ import (
 
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/app"
 	"github.com/joho/godotenv"
+	"github.com/ory/fosite"
 )
 
 type ApplicationConfig struct {
-	Postgres *DBPostgresConfig
-	JWTAuth  *AuthJwtConfig
+	Postgres    *DBPostgresConfig
+	JWTAuth     *AuthJwtConfig
+	OauthFosite *FositeAuthConfig
 }
 type DBPostgresConfig struct {
 	Host     string
@@ -38,6 +40,16 @@ type AuthJwtConfig struct {
 	AccessTokenTTL  time.Duration // Время жизни токена
 	RefreshTokenTTL time.Duration // Время жизни рефреш токена
 	Issuer          string        // Система, которая выпустила токен
+}
+
+type FositeAuthConfig struct {
+	SessionEncKey         string // Ключ шифрования для сохранения сессии
+	FositeGlobalSecret    string // Ключе шифрования для кодов авторизации
+	AccessTokenIssuer     string
+	TokenURL              string
+	ScopeStrategy         func(haystack []string, needle string) bool
+	AuthorizeCodeLifespan time.Duration
+	EnforcePKCE           bool
 }
 
 func (c *DBPostgresConfig) DSN() string {
@@ -108,7 +120,28 @@ func (a *AuthJwtConfig) RunAuthConfigWithEnv() error {
 	return nil
 }
 
-func LoadConfig() (*ApplicationConfig, error) {
+func (f *FositeAuthConfig) RunFositeConfigWithEnv() error {
+	r := &envReader{}
+
+	cfg := FositeAuthConfig{
+		SessionEncKey:         r.str("SESSION_ENC_KEY"),
+		FositeGlobalSecret:    r.str("FOSITE_GLOBAL_SECRET"),
+		AccessTokenIssuer:     r.str("ACCESS_TOKEN_ISSUER"),
+		TokenURL:              r.str("TOKEN_URL"),
+		ScopeStrategy:         fosite.ExactScopeStrategy,
+		AuthorizeCodeLifespan: r.duration("AUTHORIZE_CODE_LIFESPAN"),
+		EnforcePKCE:           r.bool("ENFORCE_PKCE"),
+	}
+
+	if r.err != nil {
+		return r.err
+	}
+
+	*f = cfg
+	return nil
+}
+
+func LoadApplicationConfig() (*ApplicationConfig, error) {
 	if err := godotenv.Load(); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, fmt.Errorf("load .env: %w", err)
 	}
@@ -116,6 +149,7 @@ func LoadConfig() (*ApplicationConfig, error) {
 	r := &envReader{}
 	postgresCfg := &DBPostgresConfig{}
 	authCfg := &AuthJwtConfig{}
+	fositeCfg := &FositeAuthConfig{}
 
 	err := postgresCfg.RunDbConfigWithEnv()
 	if err != nil {
@@ -127,9 +161,15 @@ func LoadConfig() (*ApplicationConfig, error) {
 		return nil, err
 	}
 
+	err = fositeCfg.RunFositeConfigWithEnv()
+	if err != nil {
+		return nil, err
+	}
+
 	cfg := &ApplicationConfig{
-		Postgres: postgresCfg,
-		JWTAuth:  authCfg,
+		Postgres:    postgresCfg,
+		JWTAuth:     authCfg,
+		OauthFosite: fositeCfg,
 	}
 
 	if r.err != nil {
