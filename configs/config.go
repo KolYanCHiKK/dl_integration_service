@@ -49,6 +49,8 @@ type FositeAuthConfig struct {
 	TokenURL              string
 	ScopeStrategy         func(haystack []string, needle string) bool
 	AuthorizeCodeLifespan time.Duration
+	AccessTokenLifespan   time.Duration
+	RefreshTokenLifespan  time.Duration
 	EnforcePKCE           bool
 }
 
@@ -130,6 +132,8 @@ func (f *FositeAuthConfig) RunFositeConfigWithEnv() error {
 		TokenURL:              r.str("TOKEN_URL"),
 		ScopeStrategy:         fosite.ExactScopeStrategy,
 		AuthorizeCodeLifespan: r.duration("AUTHORIZE_CODE_LIFESPAN"),
+		AccessTokenLifespan:   r.duration("JWT_ACCESS_TTL"),
+		RefreshTokenLifespan:  r.duration("JWT_REFRESH_TTL"),
 		EnforcePKCE:           r.bool("ENFORCE_PKCE"),
 	}
 

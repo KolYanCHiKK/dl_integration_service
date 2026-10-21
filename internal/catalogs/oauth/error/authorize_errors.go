@@ -59,15 +59,15 @@ func MapClientLoadError(err error) error {
 	}
 }
 
-func MapSessionErr(err error) error {
+func MapSessionError(err error) error {
 	switch {
 	case err == nil:
 		return nil
 	case errors.Is(err, AuthorizeCodeNotFound), errors.Is(err, PKCERequestNotFound), errors.Is(err, OauthRequestNotFound):
-		logger2.CreateErrLog(err.Error(), "Ошбика поиска данных при создании fosite сессии")
+		logger2.CreateErrLog(err.Error(), "Ошибка поиска данных при создании fosite сессии")
 		return fosite.ErrNotFound
 	default:
-		logger2.CreateErrLog(err.Error(), "Ошбика создания fosite сессии")
+		logger2.CreateErrLog(err.Error(), "Ошибка создания fosite сессии")
 		return fosite.ErrServerError
 	}
 }

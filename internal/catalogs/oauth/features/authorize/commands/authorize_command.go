@@ -124,18 +124,18 @@ func (c *AuthorizeCommand) CreateAuthorizeCodeSession(ctx context.Context, signa
 
 	mappedRequest, err := commands.MapFositeRequestToDatabaseRequest(req)
 	if err != nil {
-		return error2.MapSessionErr(err)
+		return error2.MapSessionError(err)
 	}
 
 	err = uow.ExecuteTransaction(ctx, c.Postgres, func(tx *gorm.DB) error {
-		id, err := c.ensureRequest(tx, ctx, *mappedRequest)
+		id, err := c.EnsureRequest(tx, ctx, *mappedRequest)
 		if err != nil {
 			return err
 		}
 		return c.Postgres.CreateAuthorizeCode(tx, ctx, *id, signature, req.GetSession().GetExpiresAt(fosite.AuthorizeCode))
 	})
 	if err != nil {
-		return error2.MapSessionErr(err)
+		return error2.MapSessionError(err)
 	}
 	return nil
 }
@@ -143,12 +143,13 @@ func (c *AuthorizeCommand) CreateAuthorizeCodeSession(ctx context.Context, signa
 func (c *AuthorizeCommand) GetAuthorizeCodeSession(ctx context.Context, signature string, session fosite.Session) (fosite.Requester, error) {
 	code, err := c.Postgres.GetAuthorizeCode(ctx, signature)
 	if err != nil {
-		return nil, error2.MapSessionErr(err)
+		return nil, error2.MapSessionError(err)
 	}
-	req, err := c.loadRequester(ctx, code.RequestID, session)
+	req, err := c.LoadRequester(ctx, code.RequestID, session)
 	if err != nil {
-		return nil, error2.MapSessionErr(err)
+		return nil, error2.MapSessionError(err)
 	}
+	req.GetSession().SetExpiresAt(fosite.AuthorizeCode, code.ExpiresAt) // Установливаем срок жизни токена
 	if !code.Active {
 		return req, fosite.ErrInvalidatedAuthorizeCode // Отзываем токен если он уже был использован
 	}
@@ -156,7 +157,12 @@ func (c *AuthorizeCommand) GetAuthorizeCodeSession(ctx context.Context, signatur
 }
 
 func (c *AuthorizeCommand) InvalidateAuthorizeCodeSession(ctx context.Context, signature string) error {
-	return error2.MapSessionErr(c.Postgres.DeactivateAuthorizeCode(ctx, signature))
+	err := c.Postgres.DeactivateAuthorizeCode(ctx, signature)
+	if err != nil {
+		return error2.MapSessionError(err)
+	}
+
+	return nil
 }
 
 func (c *AuthorizeCommand) CreatePKCERequestSession(ctx context.Context, signature string, req fosite.Requester) error {
@@ -170,45 +176,51 @@ func (c *AuthorizeCommand) CreatePKCERequestSession(ctx context.Context, signatu
 	challenge := form.Get("code_challenge")
 	method := form.Get("code_challenge_method")
 	if method == "" {
-		method = "S256"
+		method = "plain"
 	}
 
 	mapped, err := commands.MapFositeRequestToDatabaseRequest(req)
 	if err != nil {
-		return error2.MapSessionErr(err)
+		return error2.MapSessionError(err)
 	}
 	err = uow.ExecuteTransaction(ctx, c.Postgres, func(tx *gorm.DB) error {
-		id, err := c.ensureRequest(tx, ctx, *mapped)
+		id, err := c.EnsureRequest(tx, ctx, *mapped)
 		if err != nil {
 			return err
 		}
 		return c.Postgres.CreatePKCERequest(tx, ctx, *id, challenge, method, exp)
 	})
-	return error2.MapSessionErr(err)
+	return error2.MapSessionError(err)
 }
 
 func (c *AuthorizeCommand) GetPKCERequestSession(ctx context.Context, signature string, session fosite.Session) (fosite.Requester, error) {
 	pkce, err := c.Postgres.GetPKCERequest(ctx, signature)
 	if err != nil {
-		return nil, error2.MapSessionErr(err)
+		return nil, error2.MapSessionError(err)
 	}
-	req, err := c.loadRequester(ctx, pkce.RequestID, session)
+	req, err := c.LoadRequester(ctx, pkce.RequestID, session)
 	if err != nil {
-		return nil, error2.MapSessionErr(err)
+		return nil, error2.MapSessionError(err)
 	}
 
+	req.GetSession().SetExpiresAt(fosite.AuthorizeCode, pkce.ExpiresAt) // Установливаем срок жизни токена
 	req.Form.Set("code_challenge", pkce.CodeChallenge)
 	req.Form.Set("code_challenge_method", pkce.ChallengeMethod)
 	return req, nil
 }
 
 func (c *AuthorizeCommand) DeletePKCERequestSession(ctx context.Context, signature string) error {
-	return error2.MapSessionErr(c.Postgres.DeletePKCERequest(ctx, signature))
+	err := c.Postgres.DeletePKCERequest(ctx, signature)
+	if err != nil {
+		return error2.MapSessionError(err)
+	}
+
+	return nil
 }
 
 // Вспомогательные функции для сборки fosite
 
-func (c *AuthorizeCommand) ensureRequest(tx *gorm.DB, ctx context.Context, request commands.FositeRequestToDatabaseRequest) (*oauth.AuthRequestId, error) {
+func (c *AuthorizeCommand) EnsureRequest(tx *gorm.DB, ctx context.Context, request commands.FositeRequestToDatabaseRequest) (*oauth.AuthRequestId, error) {
 	if id, found, err := c.Postgres.GetOauthRequestIDByFositeID(tx, ctx, request.FositeRequestID); err != nil {
 		return nil, err
 	} else if found {
@@ -248,7 +260,7 @@ func (c *AuthorizeCommand) ensureRequest(tx *gorm.DB, ctx context.Context, reque
 	return id, nil
 }
 
-func (c *AuthorizeCommand) loadRequester(ctx context.Context, requestID oauth.AuthRequestId, session fosite.Session) (*fosite.Request, error) {
+func (c *AuthorizeCommand) LoadRequester(ctx context.Context, requestID oauth.AuthRequestId, session fosite.Session) (*fosite.Request, error) {
 	oauthRequest, err := c.Postgres.GetOauthRequest(ctx, requestID)
 	if err != nil {
 		return nil, err

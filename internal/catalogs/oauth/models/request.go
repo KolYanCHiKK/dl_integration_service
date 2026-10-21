@@ -53,37 +53,41 @@ func (RequestResource) TableName() string {
 }
 
 type TokenRecord struct {
-	ID        oauth.TokenId       `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	Signature string              `gorm:"size:255;uniqueIndex"`
-	RequestID oauth.AuthRequestId `gorm:"type:uuid;not null;uniqueIndex"`
-	ExpiresAt time.Time           `gorm:"type:timestamptz;not null;index"`
-	Active    bool                `gorm:"not null;default:true"`
+	ID        oauth.TokenId `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	Signature string        `gorm:"size:255;uniqueIndex"`
+	ExpiresAt time.Time     `gorm:"type:timestamptz;not null;index"`
+	Active    bool          `gorm:"not null;default:true"`
 
 	Request *Request `gorm:"foreignKey:RequestID;constraint:OnDelete:CASCADE"`
 }
 
 type AuthorizeCode struct {
 	TokenRecord `gorm:"embedded"`
-	CreatedAt   time.Time `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt   time.Time `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	RequestID   oauth.AuthRequestId `gorm:"type:uuid;not null;uniqueIndex"`
+	CreatedAt   time.Time           `gorm:"not null;type:timestamptz;autoCreateTime"`
+	UpdatedAt   time.Time           `gorm:"not null;type:timestamptz;autoUpdateTime"`
 }
 
 func (AuthorizeCode) TableName() string { return "edp.authorize_code" }
 
 type AccessToken struct {
 	TokenRecord `gorm:"embedded"`
-	CreatedAt   time.Time `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt   time.Time `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	RequestID   oauth.AuthRequestId `gorm:"type:uuid;not null;index"`
+	CreatedAt   time.Time           `gorm:"not null;type:timestamptz;autoCreateTime"`
+	UpdatedAt   time.Time           `gorm:"not null;type:timestamptz;autoUpdateTime"`
 }
 
 func (AccessToken) TableName() string { return "edp.access_token" }
 
 type RefreshToken struct {
-	TokenRecord          `gorm:"embedded"`
-	AccessTokenSignature string     `gorm:"size:255;index"`         // access token, выданный вместе с refresh (нужен при rotation)
-	FirstUsedAt          *time.Time `gorm:"type:timestamptz;index"` // для grace period при rotation (параллельные запросы клиента при замене refresh токена)
-	CreatedAt            time.Time  `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt            time.Time  `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	TokenRecord   `gorm:"embedded"`
+	AccessTokenId *oauth.TokenId      `gorm:"type:uuid;index"`        // access token, выданный вместе с refresh (нужен при rotation)
+	FirstUsedAt   *time.Time          `gorm:"type:timestamptz;index"` // для grace period при rotation (параллельные запросы клиента при замене refresh токена)
+	RequestID     oauth.AuthRequestId `gorm:"type:uuid;not null;index"`
+	CreatedAt     time.Time           `gorm:"not null;type:timestamptz;autoCreateTime"`
+	UpdatedAt     time.Time           `gorm:"not null;type:timestamptz;autoUpdateTime"`
+
+	AccessToken *AccessToken `gorm:"foreignKey:AccessTokenId;constraint:OnDelete:SET NULL"`
 }
 
 func (RefreshToken) TableName() string { return "edp.refresh_token" }

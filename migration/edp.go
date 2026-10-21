@@ -19,6 +19,7 @@ func CreateEdpTables(db *gorm.DB) error {
 			return err
 		}
 
+		// Проводим автомиграцию
 		if err := tx.AutoMigrate(
 			&user.User{},
 			&user.Role{},
@@ -30,6 +31,7 @@ func CreateEdpTables(db *gorm.DB) error {
 			&models.ClientGrantType{},
 			&models.ClientResponseType{},
 			&models.ClientScope{},
+			&models.Scope{},
 			&models.Resource{},
 			&models.ClientResource{},
 			&models.ClientSecretRotation{},
@@ -54,7 +56,7 @@ func CreateEdpTables(db *gorm.DB) error {
 	})
 }
 
-func DropUsers(db *gorm.DB) error {
+func DropEdpTables(db *gorm.DB) error {
 	return db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Exec(`SET LOCAL search_path TO ` + schema).Error; err != nil {
 			return err
@@ -71,6 +73,7 @@ func DropUsers(db *gorm.DB) error {
 			&models.ClientGrantType{},
 			&models.ClientResponseType{},
 			&models.ClientScope{},
+			&models.Scope{},
 			&models.Resource{},
 			&models.ClientResource{},
 			&models.ClientSecretRotation{},

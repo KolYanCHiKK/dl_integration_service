@@ -10,11 +10,11 @@ import (
 type Client struct {
 	ID                     oauth.ClientId     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	Name                   string             `gorm:"size:255;not null"`
-	Status                 oauth.ClientStatus `gorm:"size:16;not null;default:active;index"`
+	Status                 oauth.ClientStatus `gorm:"type:client_status_type;not null;default:active;index"`
 	Owner                  string             `gorm:"size:255"`
 	SecretHash             string             `gorm:"size:255"`
 	Public                 bool               `gorm:"not null;default:false"`
-	AuthMethod             string             `gorm:"size:32;not null;default:client_secret_basic"`
+	AuthMethod             string             `gorm:"type:auth_method_type;not null;default:client_secret_basic"`
 	AuthSigningAlg         string             `gorm:"size:16"`
 	JWKS                   datatypes.JSON     `gorm:"type:jsonb"`
 	JWKSURI                string             `gorm:"size:1024;default:null"`
@@ -47,7 +47,7 @@ func (ClientRedirectURI) TableName() string {
 type ClientGrantType struct {
 	ID        oauth.ClientGrantTypeId `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	ClientID  oauth.ClientId          `gorm:"type:uuid;index:ux_client_grant_type,unique"`
-	GrantType oauth.GrantType         `gorm:"size:64;index:ux_client_grant_type,unique;check:chk_client_grant_type,grant_type IN ('authorization_code','refresh_token','client_credentials')"`
+	GrantType oauth.GrantType         `gorm:"type:grant_type_enum;index:ux_client_grant_type,unique;check:chk_client_grant_type,grant_type IN ('authorization_code','refresh_token','client_credentials')"`
 	CreatedAt time.Time               `gorm:"not null;type:timestamptz;autoCreateTime"`
 	UpdatedAt time.Time               `gorm:"not null;type:timestamptz;autoUpdateTime"`
 
@@ -61,7 +61,7 @@ func (ClientGrantType) TableName() string {
 type ClientResponseType struct {
 	ID           oauth.ResponseTypeId `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	ClientID     oauth.ClientId       `gorm:"type:uuid;index:ux_client_response_type,unique"`
-	ResponseType string               `gorm:"size:64;index:ux_client_response_type,unique;check:chk_client_response_type,response_type IN ('code','id_token','token')"`
+	ResponseType string               `gorm:"type:responce_type_enum;index:ux_client_response_type,unique;check:chk_client_response_type,response_type IN ('code','id_token','token')"`
 	IsDeleted    bool                 `gorm:"not null;type:boolean;default:false"`
 	CreatedAt    time.Time            `gorm:"not null;type:timestamptz;autoCreateTime"`
 	UpdatedAt    time.Time            `gorm:"not null;type:timestamptz;autoUpdateTime"`

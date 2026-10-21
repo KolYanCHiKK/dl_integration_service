@@ -10,6 +10,7 @@ import (
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
 	postgres2 "github.com/KolYanCHiKK/dl_integration_service/pkg/postgres"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
@@ -45,7 +46,8 @@ func main() {
 	}
 
 	// Инициализация и создание роутера
-	mux := chi.NewMux()
+	mux := chi.NewRouter()
+	mux.Use(middleware.Recoverer)
 	logger.CreateOperationLogs("starting_server", "port", "8080")
 
 	// Инициализация и поднятие сервера

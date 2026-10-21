@@ -20,7 +20,7 @@ type AuthorizeHandlerDeps struct {
 	Cipher      *aead.Cipher
 }
 
-func NewCAuthorizeHandler(mux *chi.Mux, deps *AuthorizeHandlerDeps) {
+func NewAuthorizeHandler(mux *chi.Mux, deps *AuthorizeHandlerDeps) {
 	handler := &AuthorizeHandler{
 		Mux:        mux,
 		Dependents: deps,

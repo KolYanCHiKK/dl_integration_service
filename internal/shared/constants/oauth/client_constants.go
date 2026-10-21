@@ -5,6 +5,7 @@ import "github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oaut
 const (
 	ClientStatusActive  oauth.ClientStatus = "active"
 	ClientStatusBlocked oauth.ClientStatus = "blocked"
+	ClientStatusDeleted oauth.ClientStatus = "deleted"
 )
 
 const (
