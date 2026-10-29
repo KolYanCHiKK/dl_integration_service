@@ -73,3 +73,16 @@ type LoginSession struct {
 func (LoginSession) TableName() string {
 	return "edp.login_session"
 }
+
+type LoginRequest struct {
+	ID          user.LoginRequestId `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	RedirectURL string              `gorm:"not null;type:text"`
+	UsedAt      *time.Time          `gorm:"type:timestamptz;index"`
+	ExpiresAt   time.Time           `gorm:"not null;type:timestamptz;index"`
+	CreatedAt   time.Time           `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt   time.Time           `gorm:"not null;default:now()type:timestamptz;autoUpdateTime"`
+}
+
+func (LoginRequest) TableName() string {
+	return "edp.login_request"
+}

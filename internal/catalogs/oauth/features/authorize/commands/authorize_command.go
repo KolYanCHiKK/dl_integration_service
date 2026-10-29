@@ -7,7 +7,7 @@ import (
 	"time"
 
 	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/error"
-	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/mappings/commands"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/mappings"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/repository/postgres"
 	oauth2 "github.com/KolYanCHiKK/dl_integration_service/internal/shared/constants/oauth"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oauth"
@@ -40,7 +40,7 @@ func (c *AuthorizeCommand) GetClient(ctx context.Context, id string) (fosite.Cli
 	}
 
 	var (
-		client        *commands.ClientParametersMapping
+		client        *mappings.ClientParametersMapping
 		grantTypes    []string
 		responseTypes []string
 		redirectURIs  []string
@@ -56,7 +56,7 @@ func (c *AuthorizeCommand) GetClient(ctx context.Context, id string) (fosite.Cli
 		if err != nil {
 			return err
 		}
-		client = commands.MapClientToCommand(cl)
+		client = mappings.MapClientToCommand(cl)
 		return nil
 	})
 	g.Go(func() (err error) {
@@ -122,7 +122,7 @@ func (c *AuthorizeCommand) CreateAuthorizeCodeSession(ctx context.Context, signa
 		return err
 	}
 
-	mappedRequest, err := commands.MapFositeRequestToDatabaseRequest(req)
+	mappedRequest, err := mappings.MapFositeRequestToDatabaseRequest(req)
 	if err != nil {
 		return error2.MapSessionError(err)
 	}
@@ -179,7 +179,7 @@ func (c *AuthorizeCommand) CreatePKCERequestSession(ctx context.Context, signatu
 		method = "plain"
 	}
 
-	mapped, err := commands.MapFositeRequestToDatabaseRequest(req)
+	mapped, err := mappings.MapFositeRequestToDatabaseRequest(req)
 	if err != nil {
 		return error2.MapSessionError(err)
 	}
@@ -220,7 +220,7 @@ func (c *AuthorizeCommand) DeletePKCERequestSession(ctx context.Context, signatu
 
 // Вспомогательные функции для сборки fosite
 
-func (c *AuthorizeCommand) EnsureRequest(tx *gorm.DB, ctx context.Context, request commands.FositeRequestToDatabaseRequest) (*oauth.AuthRequestId, error) {
+func (c *AuthorizeCommand) EnsureRequest(tx *gorm.DB, ctx context.Context, request mappings.FositeRequestToDatabaseRequest) (*oauth.AuthRequestId, error) {
 	if id, found, err := c.Postgres.GetOauthRequestIDByFositeID(tx, ctx, request.FositeRequestID); err != nil {
 		return nil, err
 	} else if found {

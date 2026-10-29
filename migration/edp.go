@@ -25,6 +25,7 @@ func CreateEdpTables(db *gorm.DB) error {
 			&user.Role{},
 			&user.UserRole{},
 			&user.LoginSession{},
+			&user.LoginRequest{},
 
 			&models.Client{},
 			&models.ClientRedirectURI{},
@@ -67,6 +68,7 @@ func DropEdpTables(db *gorm.DB) error {
 			&user.Role{},
 			&user.UserRole{},
 			&user.LoginSession{},
+			&user.LoginRequest{},
 
 			&models.Client{},
 			&models.ClientRedirectURI{},

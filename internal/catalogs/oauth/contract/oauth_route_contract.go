@@ -29,8 +29,10 @@ func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *confi
 		return err, "Ошибка создания объекта шифрования"
 	}
 
-	// Создаем репозиторий и команду
+	// Создаем репозиторий
 	oauthPostgresRepository := postgres.NewPostgres(database)
+
+	// Создаем комманды
 	oauthCommand := commands.NewAuthorizeCommand(oauthPostgresRepository, cipher)
 	tokenCommand := commands2.NewTokenCommand(oauthPostgresRepository, oauthCommand)
 

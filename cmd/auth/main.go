@@ -51,9 +51,9 @@ func main() {
 	logger.CreateOperationLogs("starting_server", "port", "8080")
 
 	// Инициализация и поднятие сервера
-	err = auth.StartOauthServer(mux, postgres, appConfig.OauthFosite)
-	if err != nil {
-		logger.CreateErrLog(err.Error(), "Ошибка подготовки запуска сервера")
+	errParams := auth.StartOauthServer(mux, postgres, appConfig.OauthFosite)
+	if errParams != nil {
+		logger.CreateErrLog(errParams.Error.Error(), errParams.Info)
 		return
 	}
 

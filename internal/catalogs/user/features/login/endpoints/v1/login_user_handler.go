@@ -1,7 +1,9 @@
 package v1
 
 import (
+	"github.com/KolYanCHiKK/dl_integration_service/configs"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/features/login/commands"
+	"github.com/KolYanCHiKK/dl_integration_service/pkg/validation"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -11,7 +13,9 @@ type LoginUserHandler struct {
 }
 
 type LoginUserHandlerDeps struct {
-	Command *commands.LoginUserCommand
+	Command    *commands.LoginUserCommand
+	Validator  *validation.RestRequesterValidator
+	AuthConfig *configs.AuthJwtConfig
 }
 
 func NewCreateUserHandler(mux *chi.Mux, deps *LoginUserHandlerDeps) {

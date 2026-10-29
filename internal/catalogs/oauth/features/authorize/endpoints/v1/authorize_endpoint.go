@@ -29,7 +29,7 @@ func (ep *AuthorizeEndpoint) handle() http.HandlerFunc {
 			return
 		}
 
-		// Проверяем передали ли скоупы и ресуры
+		// Проверяем передали ли скоупы и ресурcы
 		if len(authReq.GetRequestedScopes()) == 0 {
 			err := fosite.ErrInvalidScope.WithHint("scope is required")
 			logger.CreateErrLog(err.Error(), "Отсутсвуют scopes в запрос /authorize")

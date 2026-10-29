@@ -39,12 +39,14 @@ type AuthJwtConfig struct {
 	SecretKey       string        // Секретный ключ
 	AccessTokenTTL  time.Duration // Время жизни токена
 	RefreshTokenTTL time.Duration // Время жизни рефреш токена
+	LoginSessionTTl time.Duration // Время жизни сессии пользователя
+	LoginRequestTTL time.Duration // Время жизни запроса на ввод логина и пароля
 	Issuer          string        // Система, которая выпустила токен
 }
 
 type FositeAuthConfig struct {
 	SessionEncKey         string // Ключ шифрования для сохранения сессии
-	FositeGlobalSecret    string // Ключе шифрования для кодов авторизации
+	FositeGlobalSecret    string // Ключ шифрования для кодов авторизации
 	AccessTokenIssuer     string
 	TokenURL              string
 	ScopeStrategy         func(haystack []string, needle string) bool
@@ -111,6 +113,8 @@ func (a *AuthJwtConfig) RunAuthConfigWithEnv() error {
 		SecretKey:       r.str("JWT_SECRET_KEY"),
 		AccessTokenTTL:  r.duration("JWT_ACCESS_TTL"),
 		RefreshTokenTTL: r.duration("JWT_REFRESH_TTL"),
+		LoginSessionTTl: r.duration("LOGIN_SESSION_TTL"),
+		LoginRequestTTL: r.duration("LOGIN_REQUEST_TTL"),
 		Issuer:          r.str("JWT_ISSUER"),
 	}
 

@@ -1,4 +1,4 @@
-package commands
+package mappings
 
 import (
 	"encoding/json"
