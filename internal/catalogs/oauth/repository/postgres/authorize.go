@@ -163,27 +163,53 @@ func (p *Postgres) CreateRequestResources(tx *gorm.DB, ctx context.Context, requ
 		return nil // нечего вставлять, пустой срез
 	}
 
-	rows := make([]models.RequestResource, 0, len(resources))
-	for _, r := range resources {
-		rows = append(rows, models.RequestResource{
-			RequestID: requestId,
-			Kind:      kind,
-			Resource:  r,
-		})
+	var resourceIds []oauth.ResourceId
+	err := tx.WithContext(ctx).Model(&models.Resource{}).Where("name in ?", resources).
+		Pluck("id", &resourceIds).Error
+
+	if err != nil {
+		return err
 	}
 
-	return tx.WithContext(ctx).Create(&rows).Error
+	rows := make([]models.RequestResource, 0, len(resources))
+	for _, r := range resourceIds {
+		rows = append(rows, models.RequestResource{
+			RequestID:  requestId,
+			Kind:       kind,
+			ResourceId: r,
+		})
+	}
+	err = tx.WithContext(ctx).Create(&rows).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (p *Postgres) CreateRequestScopes(tx *gorm.DB, ctx context.Context, requestId oauth.AuthRequestId, kind oauth.RequestScopeKind, scopes []string) error {
+	if len(scopes) == 0 {
+		return nil // нечего вставлять, пустой срез
+	}
+
+	var scopeIds []oauth.ScopeId
+	err := tx.WithContext(ctx).Model(&models.Scope{}).Where("name in ?", scopes).
+		Pluck("id", &scopeIds).Error
+
+	if err != nil {
+		return err
+	}
+
 	rows := make([]models.RequestScope, 0, len(scopes))
-	for _, s := range scopes {
-		rows = append(rows, models.RequestScope{RequestID: requestId, Kind: kind, Scope: s})
+	for _, s := range scopeIds {
+		rows = append(rows, models.RequestScope{
+			RequestID: requestId,
+			Kind:      kind,
+			ScopeId:   s,
+		})
 	}
-	if len(rows) == 0 {
-		return nil
-	}
-	err := tx.WithContext(ctx).Create(&rows).Error
+
+	err = tx.WithContext(ctx).Create(&rows).Error
 	if err != nil {
 		return err
 	}
@@ -273,10 +299,11 @@ func (p *Postgres) GetOauthRequest(ctx context.Context, id oauth.AuthRequestId) 
 }
 
 func (p *Postgres) GetRequestScopes(ctx context.Context, requestId oauth.AuthRequestId, kind oauth.RequestScopeKind) ([]string, error) {
-	var scopes []models.RequestScope
+	var scopes []models.Scope
 
-	err := p.WithContext(ctx).
-		Where("request_id = ? AND kind = ? AND is_deleted = false", requestId, kind).
+	err := p.WithContext(ctx).Select("os.*").
+		Table("edp.oauth_scope AS os").Joins("JOIN edp.request_scope AS rs ON os.id = rs.scope_id").
+		Where("rs.request_id = ? AND rs.kind = ? AND rs.is_deleted = false", requestId, kind).
 		Find(&scopes).Error
 
 	if err != nil {
@@ -285,19 +312,19 @@ func (p *Postgres) GetRequestScopes(ctx context.Context, requestId oauth.AuthReq
 
 	var scopeNames []string
 	for _, value := range scopes {
-		scopeNames = append(scopeNames, value.Scope)
+		scopeNames = append(scopeNames, value.Name)
 	}
 
 	return scopeNames, nil // Отсуствие скоупов не ошибка по спецификации Oauth, но в хендлере проверяем
 }
 
 func (p *Postgres) GetRequestResources(ctx context.Context, requestId oauth.AuthRequestId, kind oauth.RequestResourceKind) ([]string, error) {
-	var resources []models.RequestResource
+	var resources []models.Resource
 
-	err := p.WithContext(ctx).
-		Where("request_id = ? AND kind = ? AND is_deleted = false", requestId, kind).
-		Find(&resources).
-		Error
+	err := p.WithContext(ctx).Select("r.*").
+		Table("edp.oauth_resource AS r").Joins("JOIN edp.request_resource AS rr ON r.id = rr.resource_id ").
+		Where("rr.request_id = ? AND rr.kind = ? AND rr.is_deleted = false", requestId, kind).
+		Find(&resources).Error
 
 	if err != nil {
 		return nil, err
@@ -305,7 +332,7 @@ func (p *Postgres) GetRequestResources(ctx context.Context, requestId oauth.Auth
 
 	var resourceNames []string
 	for _, value := range resources {
-		resourceNames = append(resourceNames, value.Resource)
+		resourceNames = append(resourceNames, value.Name)
 	}
 
 	return resourceNames, nil // Отсуствие ресурсов не ошибка по спецификации Oauth, но в хендлере проверяем

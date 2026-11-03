@@ -16,8 +16,8 @@ type Request struct {
 	Form            datatypes.JSON      `gorm:"type:jsonb;not null"`                     // Url.Values исходного запроса
 	Session         []byte              `gorm:"type:bytea;not null"`                     // Сохранённое внутреннее состояние fosite для конкретного OAuth-запроса
 	IsDeleted       bool                `gorm:"not null;type:boolean;default:false"`
-	CreatedAt       time.Time           `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt       time.Time           `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	CreatedAt       time.Time           `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt       time.Time           `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 }
 
 func (Request) TableName() string { return "edp.oauth_request" }
@@ -26,26 +26,28 @@ type RequestScope struct {
 	ID        oauth.RequestScopeId   `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	RequestID oauth.AuthRequestId    `gorm:"type:uuid;uniqueIndex:ux_request_scope_kind"`
 	Kind      oauth.RequestScopeKind `gorm:"size:16;uniqueIndex:ux_request_scope_kind;check:chk_request_scope_kind,kind IN ('requested','granted')"`
-	Scope     string                 `gorm:"size:128;uniqueIndex:ux_request_scope_kind"` // Scope прямо с запроса и ответа
+	ScopeId   oauth.ScopeId          `gorm:"type:uuid;uniqueIndex:ux_request_scope_kind"` // Scope прямо с запроса и ответа
 	IsDeleted bool                   `gorm:"not null;type:boolean;default:false"`
-	CreatedAt time.Time              `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt time.Time              `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	CreatedAt time.Time              `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt time.Time              `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 
+	Scope   *Scope   `gorm:"foreignKey:ScopeId;constraint:OnUpdate:CASCADE"`
 	Request *Request `gorm:"foreignKey:RequestID;constraint:OnDelete:CASCADE"`
 }
 
 func (RequestScope) TableName() string { return "edp.request_scope" }
 
 type RequestResource struct {
-	ID        oauth.RequestResourceId   `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	RequestID oauth.AuthRequestId       `gorm:"type:uuid;uniqueIndex:ux_request_resourcse_kind"`
-	Kind      oauth.RequestResourceKind `gorm:"size:16;uniqueIndex:ux_request_resourcse_kind;check:chk_request_resource_kind,kind IN ('requested','granted')"`
-	Resource  string                    `gorm:"size:255;uniqueIndex:ux_request_resourcse_kind"` // Ресурсы прямо с запроса и ответа
-	IsDeleted bool                      `gorm:"not null;type:boolean;default:false"`
-	CreatedAt time.Time                 `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt time.Time                 `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	ID         oauth.RequestResourceId   `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	RequestID  oauth.AuthRequestId       `gorm:"type:uuid;uniqueIndex:ux_request_resourcse_kind"`
+	Kind       oauth.RequestResourceKind `gorm:"size:16;uniqueIndex:ux_request_resourcse_kind;check:chk_request_resource_kind,kind IN ('requested','granted')"`
+	ResourceId oauth.ResourceId          `gorm:"type:uuid;uniqueIndex:ux_request_resourcse_kind"` // Ресурсы прямо с запроса и ответа
+	IsDeleted  bool                      `gorm:"not null;type:boolean;default:false"`
+	CreatedAt  time.Time                 `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt  time.Time                 `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 
-	Request *Request `gorm:"foreignKey:RequestID;constraint:OnDelete:CASCADE"`
+	Resource *Resource `gorm:"foreignKey:ResourceId;constraint:OnUpdate:CASCADE"`
+	Request  *Request  `gorm:"foreignKey:RequestID;constraint:OnDelete:CASCADE"`
 }
 
 func (RequestResource) TableName() string {
@@ -64,8 +66,8 @@ type TokenRecord struct {
 type AuthorizeCode struct {
 	TokenRecord `gorm:"embedded"`
 	RequestID   oauth.AuthRequestId `gorm:"type:uuid;not null;uniqueIndex"`
-	CreatedAt   time.Time           `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt   time.Time           `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	CreatedAt   time.Time           `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt   time.Time           `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 }
 
 func (AuthorizeCode) TableName() string { return "edp.authorize_code" }
@@ -73,8 +75,8 @@ func (AuthorizeCode) TableName() string { return "edp.authorize_code" }
 type AccessToken struct {
 	TokenRecord `gorm:"embedded"`
 	RequestID   oauth.AuthRequestId `gorm:"type:uuid;not null;index"`
-	CreatedAt   time.Time           `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt   time.Time           `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	CreatedAt   time.Time           `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt   time.Time           `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 }
 
 func (AccessToken) TableName() string { return "edp.access_token" }
@@ -84,8 +86,8 @@ type RefreshToken struct {
 	AccessTokenId *oauth.TokenId      `gorm:"type:uuid;index"`        // access token, выданный вместе с refresh (нужен при rotation)
 	FirstUsedAt   *time.Time          `gorm:"type:timestamptz;index"` // для grace period при rotation (параллельные запросы клиента при замене refresh токена)
 	RequestID     oauth.AuthRequestId `gorm:"type:uuid;not null;index"`
-	CreatedAt     time.Time           `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt     time.Time           `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	CreatedAt     time.Time           `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt     time.Time           `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 
 	AccessToken *AccessToken `gorm:"foreignKey:AccessTokenId;constraint:OnDelete:SET NULL"`
 }
@@ -99,8 +101,8 @@ type PKCERequest struct {
 	ChallengeMethod string              `gorm:"size:16;not null;default:S256"`
 	ExpiresAt       time.Time           `gorm:"not null;type:timestamptz;index"`
 	IsDeleted       bool                `gorm:"not null;type:boolean;default:false"`
-	CreatedAt       time.Time           `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt       time.Time           `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	CreatedAt       time.Time           `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt       time.Time           `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 
 	Request *Request `gorm:"foreignKey:RequestID;constraint:OnDelete:CASCADE"`
 }
@@ -117,8 +119,8 @@ type OIDCSession struct {
 	Nonce     string              `gorm:"size:255"`
 	AuthTime  *time.Time          `gorm:"type:timestamptz"`
 	IsDeleted bool                `gorm:"not null;type:boolean;default:false"`
-	CreatedAt time.Time           `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt time.Time           `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	CreatedAt time.Time           `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt time.Time           `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 
 	Request *Request `gorm:"foreignKey:RequestID;constraint:OnDelete:CASCADE"`
 }
@@ -132,8 +134,8 @@ type JTIBlacklist struct {
 	JTI       string               `gorm:"size:255;not null;uniqueIndex"`
 	ExpiresAt time.Time            `gorm:"not null;type:timestamptz;index"`
 	IsDeleted bool                 `gorm:"not null;type:boolean;default:false"`
-	CreatedAt time.Time            `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt time.Time            `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	CreatedAt time.Time            `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt time.Time            `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 }
 
 func (JTIBlacklist) TableName() string {
@@ -151,8 +153,8 @@ type SigningKey struct {
 	RotatedAt     *time.Time             `gorm:"type:timestamptz"`                                                                                             // Когда ключ перестал быть активным
 	RetireAfter   *time.Time             `gorm:"type:timestamptz;index"`                                                                                       // Когда перевести в retired (после истечения последних токенов)
 	IsDeleted     bool                   `gorm:"not null;type:boolean;default:false"`
-	CreatedAt     time.Time              `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt     time.Time              `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	CreatedAt     time.Time              `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt     time.Time              `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 }
 
 func (SigningKey) TableName() string {

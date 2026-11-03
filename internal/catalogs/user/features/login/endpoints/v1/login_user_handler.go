@@ -13,12 +13,13 @@ type LoginUserHandler struct {
 }
 
 type LoginUserHandlerDeps struct {
-	Command    *commands.LoginUserCommand
-	Validator  *validation.RestRequesterValidator
-	AuthConfig *configs.AuthJwtConfig
+	Command       *commands.LoginUserCommand
+	Validator     *validation.RestRequesterValidator
+	AuthConfig    *configs.AuthJwtConfig
+	NetworkConfig *configs.NetworkConfig
 }
 
-func NewCreateUserHandler(mux *chi.Mux, deps *LoginUserHandlerDeps) {
+func NewLoginUserHandler(mux *chi.Mux, deps *LoginUserHandlerDeps) {
 	handler := &LoginUserHandler{
 		Mux:        mux,
 		Dependents: deps,

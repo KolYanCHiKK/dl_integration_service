@@ -1,6 +1,9 @@
 package contract
 
 import (
+	"github.com/KolYanCHiKK/dl_integration_service/configs"
+	commands2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/features/create/commands"
+	createv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/features/create/endpoints/v1"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/features/login/commands"
 	loginv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/features/login/endpoints/v1"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/repository/postgres"
@@ -10,7 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func InitUserHandlers(mux *chi.Mux, database *postgres2.Db) *logger.DefaultErrorLogsParams {
+func InitUserHandlers(mux *chi.Mux, database *postgres2.Db, authConfig *configs.AuthJwtConfig, networkConfig *configs.NetworkConfig) *logger.DefaultErrorLogsParams {
 	// Валидаторы
 	validate, err := validation.NewRestRequesterValidator([]string{"phone"})
 	if err != nil {
@@ -22,10 +25,17 @@ func InitUserHandlers(mux *chi.Mux, database *postgres2.Db) *logger.DefaultError
 
 	// Слой комманд
 	loginCommand := commands.NewLoginUserCommand(userPostgresRepository)
+	createUserCommand := commands2.NewCreateUserCommand(userPostgresRepository)
 
 	// Хендлеры
-	loginv1.NewCreateUserHandler(mux, &loginv1.LoginUserHandlerDeps{
-		Command:   loginCommand,
+	loginv1.NewLoginUserHandler(mux, &loginv1.LoginUserHandlerDeps{
+		Command:       loginCommand,
+		Validator:     validate,
+		AuthConfig:    authConfig,
+		NetworkConfig: networkConfig,
+	})
+	createv1.NewCreateUserHandler(mux, &createv1.CreateUserHandlerDeps{
+		Command:   createUserCommand,
 		Validator: validate,
 	})
 

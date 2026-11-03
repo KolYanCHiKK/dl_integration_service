@@ -7,6 +7,8 @@ import (
 	"github.com/KolYanCHiKK/dl_integration_service/configs"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/authorize/commands"
 	authv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/authorize/endpoints/v1"
+	commands3 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/login/commands"
+	loginv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/login/endpoints/v1"
 	commands2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/token/commands"
 	tokenv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/token/endpoints/v1"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/repository/postgres"
@@ -35,6 +37,7 @@ func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *confi
 	// Создаем комманды
 	oauthCommand := commands.NewAuthorizeCommand(oauthPostgresRepository, cipher)
 	tokenCommand := commands2.NewTokenCommand(oauthPostgresRepository, oauthCommand)
+	loginCommand := commands3.LoginCommand{}
 
 	// Инициализация fosite
 	providerFosite, err := provider.NewProvider(
@@ -70,7 +73,9 @@ func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *confi
 		OauthConfig: fositeConfig,
 	})
 
-	// Хендлер Token
+	loginv1.NewLoginHandler(mux, &loginv1.LoginHandlerDeps{
+		Command: loginCommand,
+	})
 
 	return nil, ""
 }

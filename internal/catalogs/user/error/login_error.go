@@ -13,17 +13,20 @@ var (
 )
 
 var ValidationLoginErrorsMap = map[string]string{
-	"Login.required":    "Отсутствует логин или пароль",
-	"Login.min":         "Длина логина не может быть меньше 3 символов",
-	"Password.required": "Отсутствует логин или пароль",
-	"Password.min":      "Длина пароля не может быть меньше 5 символов",
+	"Login.required":          "Отсутствует логин или пароль",
+	"Login.min":               "Длина логина не может быть меньше 3 символов",
+	"Password.required":       "Отсутствует логин или пароль",
+	"Password.min":            "Длина пароля не может быть меньше 5 символов",
+	"LoginRequestId.required": "Отсутствует идентификатор запроса на авторизацию",
+	"LoginRequestId.uuid":     "Наверный тип данных идентификатора сессии",
+	"Credentials.required":    "Отсутствуют параметры авторизации в запросе",
 }
 
 var (
 	LoginRequestNotFound = errors.New("loginRequest is not found")
 )
 
-func MapUserErrors(err error) error {
+func MapUserLoginErrors(err error) error {
 	switch {
 	case errors.Is(err, UserIsNotFound):
 		logger.CreateErrLog(err.Error(), "Пользователь не найден")

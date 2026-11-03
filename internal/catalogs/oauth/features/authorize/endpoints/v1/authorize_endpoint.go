@@ -17,7 +17,7 @@ func NewAuthorizeEndpoint(params *AuthorizeHandler) interfaces.Endpoint {
 }
 
 func (ep *AuthorizeEndpoint) MapEndpoint() {
-	ep.Mux.Get("/authorize", ep.handle())
+	ep.Mux.Get("/oauth2/authorize", ep.handle())
 }
 
 func (ep *AuthorizeEndpoint) handle() http.HandlerFunc {

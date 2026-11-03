@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net"
+	"net/netip"
 	"net/url"
 	"strconv"
 	"time"
@@ -18,6 +19,7 @@ type ApplicationConfig struct {
 	Postgres    *DBPostgresConfig
 	JWTAuth     *AuthJwtConfig
 	OauthFosite *FositeAuthConfig
+	Network     *NetworkConfig
 }
 type DBPostgresConfig struct {
 	Host     string
@@ -54,6 +56,10 @@ type FositeAuthConfig struct {
 	AccessTokenLifespan   time.Duration
 	RefreshTokenLifespan  time.Duration
 	EnforcePKCE           bool
+}
+
+type NetworkConfig struct {
+	TrustedProxies []netip.Prefix
 }
 
 func (c *DBPostgresConfig) DSN() string {
@@ -149,6 +155,17 @@ func (f *FositeAuthConfig) RunFositeConfigWithEnv() error {
 	return nil
 }
 
+func (n *NetworkConfig) RunNetworkConfigWithEnv() error {
+	r := envReader{}
+
+	cfg := NetworkConfig{
+		TrustedProxies: r.prefixes("TRUSTED_PROXIES"),
+	}
+
+	*n = cfg
+	return nil
+}
+
 func LoadApplicationConfig() (*ApplicationConfig, error) {
 	if err := godotenv.Load(); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, fmt.Errorf("load .env: %w", err)
@@ -158,6 +175,7 @@ func LoadApplicationConfig() (*ApplicationConfig, error) {
 	postgresCfg := &DBPostgresConfig{}
 	authCfg := &AuthJwtConfig{}
 	fositeCfg := &FositeAuthConfig{}
+	networkCfg := &NetworkConfig{}
 
 	err := postgresCfg.RunDbConfigWithEnv()
 	if err != nil {
@@ -174,10 +192,16 @@ func LoadApplicationConfig() (*ApplicationConfig, error) {
 		return nil, err
 	}
 
+	err = networkCfg.RunNetworkConfigWithEnv()
+	if err != nil {
+		return nil, err
+	}
+
 	cfg := &ApplicationConfig{
 		Postgres:    postgresCfg,
 		JWTAuth:     authCfg,
 		OauthFosite: fositeCfg,
+		Network:     networkCfg,
 	}
 
 	if r.err != nil {

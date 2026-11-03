@@ -8,7 +8,7 @@ import (
 	logger2 "github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
 )
 
-func GenerateBadRequestResponse(w http.ResponseWriter, headerMap map[string]string, errs ...string) {
+func GenerateBadRequestResponse(w http.ResponseWriter, headerMap map[string]string, message string, errs ...string) {
 	AddBaseRestErrorResponseHeaders(w, 400)
 
 	if headerMap != nil {
@@ -16,14 +16,19 @@ func GenerateBadRequestResponse(w http.ResponseWriter, headerMap map[string]stri
 	}
 
 	body := errorpkg.BadRequestBody
-	body.Errors = append(body.Errors, errs...)
+	if message != "" {
+		body.Errors = append(body.Errors, message)
+	} else {
+		body.Errors = append(body.Errors, errs...)
+	}
 
 	// Логируем ошибки
-	logger2.CreateValidationErrLogs("rest", errs...)
+	logger2.CreateValidationErrLogs("Rest API", errs...)
 
 	err := json.NewEncoder(w).Encode(&body)
 	if err != nil {
 		ToFormCreateBodyError(err, w)
+		return
 	}
 
 }
@@ -39,7 +44,7 @@ func GenerateInternalServerErrorResponse(w http.ResponseWriter, headerMap map[st
 	body.Errors = append(body.Errors, errs...)
 
 	// Логируем ошибки
-	logger2.CreateValidationErrLogs("rest", errs...)
+	logger2.CreateValidationErrLogs("Rest API", errs...)
 
 	err := json.NewEncoder(w).Encode(&body)
 	if err != nil {
@@ -56,14 +61,43 @@ func GenerateNotFoundErrorResponse(w http.ResponseWriter, headerMap map[string]s
 	}
 
 	body := errorpkg.NotFoundErrorBody
-	body.Errors = append(body.Errors, message)
+	if message != "" {
+		body.Errors = append(body.Errors, message)
+	} else {
+		body.Errors = append(body.Errors, errs...)
+	}
 
 	// Логируем ошибки
-	logger2.CreateValidationErrLogs("rest", errs...)
+	logger2.CreateValidationErrLogs("Rest API", errs...)
 
 	err := json.NewEncoder(w).Encode(&body)
 	if err != nil {
 		ToFormCreateBodyError(err, w)
+	}
+
+}
+
+func GenerateConflictResponse(w http.ResponseWriter, headerMap map[string]string, message string, errs ...string) {
+	AddBaseRestErrorResponseHeaders(w, http.StatusConflict)
+
+	if headerMap != nil {
+		AddCustomRestResponseHeaders(w, headerMap)
+	}
+
+	body := errorpkg.BadRequestBody
+	if message != "" {
+		body.Errors = append(body.Errors, message)
+	} else {
+		body.Errors = append(body.Errors, errs...)
+	}
+
+	// Логируем ошибки
+	logger2.CreateValidationErrLogs("Rest API", errs...)
+
+	err := json.NewEncoder(w).Encode(&body)
+	if err != nil {
+		ToFormCreateBodyError(err, w)
+		return
 	}
 
 }

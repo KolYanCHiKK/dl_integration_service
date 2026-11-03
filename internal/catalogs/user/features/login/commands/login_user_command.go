@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"errors"
+	"time"
 
 	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/error"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/mappings"
@@ -25,16 +26,19 @@ func NewLoginUserCommand(postgres *postgres.Postgres) *LoginUserCommand {
 func (c *LoginUserCommand) LoginUser(ctx context.Context, loginParams *mappings.LoginRequestParams, login string, password string) (*user.LoginSessionId, string, error) {
 	userParams, err := c.Postgres.GetUserLoginParamsByLogin(ctx, login)
 	if err != nil {
-		return nil, "", error2.MapUserErrors(err)
+		return nil, "", error2.MapUserLoginErrors(err)
 	}
 
 	_, err = base64.CompareHashedPassword(userParams.UserPassword, password)
 	if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-		return nil, "", error2.MapUserErrors(error2.PasswordIsIncorrect)
+		return nil, "", error2.MapUserLoginErrors(error2.PasswordIsIncorrect)
 	}
 	if err != nil {
-		return nil, "", error2.MapUserErrors(err)
+		return nil, "", error2.MapUserLoginErrors(err)
 	}
+
+	// Пароль верный, поэтому можем проставить время авторизации
+	loginParams.AuthTime = time.Now().UTC()
 
 	var sessionParams mappings.SessionParams
 	err = uow.ExecuteTransaction(ctx, c.Postgres, func(tx *gorm.DB) error {

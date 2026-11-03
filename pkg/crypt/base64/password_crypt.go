@@ -9,10 +9,12 @@ import (
 
 var bcryptCostValue = 12
 
+var ErrorPasswordIsTooLong = errors.New("password is long")
+
 func CreateHashedPassword(password string) (string, error) {
 	bytePassword := []byte(password)
 	if len(bytePassword) > 72 {
-		return "", errors.New("password is long")
+		return "", ErrorPasswordIsTooLong
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcryptCostValue)
 	if err != nil {

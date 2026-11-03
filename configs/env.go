@@ -2,8 +2,10 @@ package configs
 
 import (
 	"fmt"
+	"net/netip"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	app2 "github.com/KolYanCHiKK/dl_integration_service/internal/shared/constants/app"
@@ -81,4 +83,38 @@ func (r *envReader) duration(key string) time.Duration {
 		return 0
 	}
 	return d
+}
+
+func (r *envReader) prefixes(key string) []netip.Prefix {
+	v, ok := os.LookupEnv(key)
+	if !ok {
+		r.fail(fmt.Errorf("variable %s is missing", key))
+		return nil
+	}
+
+	var res []netip.Prefix
+	for _, s := range strings.Split(v, ",") {
+		s = strings.TrimSpace(s)
+		if s == "" {
+			continue
+		}
+
+		if !strings.Contains(s, "/") {
+			addr, err := netip.ParseAddr(s)
+			if err != nil {
+				r.fail(fmt.Errorf("variable %s: invalid ip %q", key, s))
+				return nil
+			}
+			res = append(res, netip.PrefixFrom(addr, addr.BitLen()))
+			continue
+		}
+
+		p, err := netip.ParsePrefix(s)
+		if err != nil {
+			r.fail(fmt.Errorf("variable %s: invalid cidr %q", key, s))
+			return nil
+		}
+		res = append(res, p.Masked())
+	}
+	return res
 }

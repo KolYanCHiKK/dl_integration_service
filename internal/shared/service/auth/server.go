@@ -9,13 +9,13 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func StartOauthServer(mux *chi.Mux, database *postgres.Db, fositeConfig *configs.FositeAuthConfig) *logger2.DefaultErrorLogsParams {
-	err, errInfo := contract2.InitOauthHandlers(mux, database, fositeConfig)
+func StartOauthServer(mux *chi.Mux, database *postgres.Db, applicationConfig *configs.ApplicationConfig) *logger2.DefaultErrorLogsParams {
+	err, errInfo := contract2.InitOauthHandlers(mux, database, applicationConfig.OauthFosite)
 	if err != nil {
 		return &logger2.DefaultErrorLogsParams{Error: err, Info: errInfo}
 	}
 
-	errLoggerParams := contract.InitUserHandlers(mux, database)
+	errLoggerParams := contract.InitUserHandlers(mux, database, applicationConfig.JWTAuth, applicationConfig.Network)
 	if errLoggerParams != nil {
 		return errLoggerParams
 	}

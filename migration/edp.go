@@ -24,6 +24,10 @@ func CreateEdpTables(db *gorm.DB) error {
 			&user.User{},
 			&user.Role{},
 			&user.UserRole{},
+			&user.ClientRole{},
+			&user.PermissionTarget{},
+			&user.Permission{},
+			&user.Department{},
 			&user.LoginSession{},
 			&user.LoginRequest{},
 
@@ -67,6 +71,10 @@ func DropEdpTables(db *gorm.DB) error {
 			&user.User{},
 			&user.Role{},
 			&user.UserRole{},
+			&user.ClientRole{},
+			&user.PermissionTarget{},
+			&user.Permission{},
+			&user.Department{},
 			&user.LoginSession{},
 			&user.LoginRequest{},
 
