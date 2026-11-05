@@ -11,6 +11,7 @@ import (
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/repository/postgres"
 	oauth2 "github.com/KolYanCHiKK/dl_integration_service/internal/shared/constants/oauth"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oauth"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/user"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/crypt/aead"
 	logger2 "github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/uow"
@@ -311,4 +312,23 @@ func (c *AuthorizeCommand) LoadRequester(ctx context.Context, requestID oauth.Au
 		Form:              form,
 		Session:           session,
 	}, nil
+}
+
+func (c *AuthorizeCommand) CreateLoginRequest(ctx context.Context, redirectLoginURI string, loginRequestTTL time.Duration) (*user.LoginRequestId, error) {
+	expiresAt := time.Now().UTC().Add(loginRequestTTL)
+	loginRequestId, err := c.Postgres.CreateLoginRequest(ctx, redirectLoginURI, expiresAt)
+	if err != nil {
+		return nil, error2.MapSessionError(err)
+	}
+
+	return loginRequestId, nil
+}
+
+func (c *AuthorizeCommand) GetDefaultSessionParameters(ctx context.Context, sessionId user.LoginSessionId) (*mappings.DefaultSessionParameters, error) {
+	sessionParams, err := c.Postgres.GetDefaultSessionParameters(ctx, sessionId)
+	if err != nil {
+		return nil, error2.MapSessionError(err)
+	}
+
+	return sessionParams, nil
 }

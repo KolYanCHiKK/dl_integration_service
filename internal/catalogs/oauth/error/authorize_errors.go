@@ -19,6 +19,7 @@ var (
 	AuthorizeCodeNotFound = errors.New("authorizeCode is not found")
 	PKCERequestNotFound   = errors.New("PKCE request is not found")
 	OauthRequestNotFound  = errors.New("oauthRequest is not found")
+	LoginSessionNotFound  = errors.New("loginSession is not found")
 )
 
 func MapClientLoadError(err error) error {
@@ -63,9 +64,18 @@ func MapSessionError(err error) error {
 	switch {
 	case err == nil:
 		return nil
+
 	case errors.Is(err, AuthorizeCodeNotFound), errors.Is(err, PKCERequestNotFound), errors.Is(err, OauthRequestNotFound):
 		logger2.CreateErrLog(err.Error(), "Ошибка поиска данных при создании fosite сессии")
 		return fosite.ErrNotFound
+
+	case errors.Is(err, LoginSessionNotFound):
+		logger2.CreateErrLog(err.Error(), "Ошибка поиска сессии авторизации пользователя")
+		return LoginSessionNotFound // будем редиректить на форму авторизации  в эндпоинте
+
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return err
+
 	default:
 		logger2.CreateErrLog(err.Error(), "Ошибка создания fosite сессии")
 		return fosite.ErrServerError

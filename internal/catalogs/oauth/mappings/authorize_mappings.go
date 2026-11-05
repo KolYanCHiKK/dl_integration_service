@@ -6,6 +6,7 @@ import (
 
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/models"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oauth"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/user"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/utils"
 	"github.com/ory/fosite"
 	"gorm.io/datatypes"
@@ -97,4 +98,9 @@ func MapFositeRequestToDatabaseRequest(fr fosite.Requester) (*FositeRequestToDat
 		RequestAudience: requestAudience,
 		GrantedAudience: grantedAudience,
 	}, nil
+}
+
+type DefaultSessionParameters struct {
+	Username string      `gorm:"column:login"`
+	Subject  user.UserId `gorm:"column:id"`
 }

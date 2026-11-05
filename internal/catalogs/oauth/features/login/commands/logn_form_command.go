@@ -9,8 +9,6 @@ import (
 
 	"github.com/KolYanCHiKK/dl_integration_service/frontend"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/mappings"
-	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/repository/postgres"
-	"github.com/KolYanCHiKK/dl_integration_service/pkg/crypt/aead"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/crypt/base64"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/notice/auth"
@@ -20,7 +18,7 @@ var loginTmpl = template.Must(template.ParseFS(frontend.Templates, "auth-page/fo
 
 type LoginCommand struct{}
 
-func NewAuthorizeCommand(postgres *postgres.Postgres, cipher *aead.Cipher) *LoginCommand {
+func NewAuthorizeCommand() *LoginCommand {
 	return &LoginCommand{}
 }
 
@@ -64,7 +62,8 @@ func (c *LoginCommand) RenderLogin(w http.ResponseWriter, p mappings.LoginPage, 
 			"style-src 'nonce-"+nonce+"' https://fonts.googleapis.com; "+
 			"font-src https://fonts.gstatic.com; "+
 			"script-src 'nonce-"+nonce+"'; "+
-			"connect-src 'self'; "+ // fetch на POST /users/login
+			"connect-src 'self'; "+
+			"img-src data:; "+ // значок вкладки встроен в страницу как data:-ссылка
 			"form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
 
 	w.WriteHeader(status)

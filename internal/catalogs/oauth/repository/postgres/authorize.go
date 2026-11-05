@@ -6,9 +6,12 @@ import (
 	"time"
 
 	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/error"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/mappings"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/models"
+	models2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/models"
 	oauth2 "github.com/KolYanCHiKK/dl_integration_service/internal/shared/constants/oauth"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oauth"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/user"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -368,4 +371,37 @@ func (p *Postgres) DeletePKCERequest(ctx context.Context, signature string) erro
 	}
 
 	return nil
+}
+
+// Создания запроса на авторизацию пользователем
+
+func (p *Postgres) CreateLoginRequest(ctx context.Context, redirectLoginURI string, expiresAt time.Time) (*user.LoginRequestId, error) {
+	var loginRequest = models2.LoginRequest{
+		RedirectURL: redirectLoginURI,
+		ExpiresAt:   expiresAt,
+	}
+	err := p.WithContext(ctx).Create(&loginRequest).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &loginRequest.ID, nil
+}
+
+func (p *Postgres) GetDefaultSessionParameters(ctx context.Context, sessionId user.LoginSessionId) (*mappings.DefaultSessionParameters, error) {
+	var params mappings.DefaultSessionParameters
+
+	err := p.WithContext(ctx).Select("u.login, u.id").
+		Table(`"edp"."login_session" AS ls`).Joins(`JOIN "edp"."user" AS u ON u.id = ls.user_id`).
+		Where(`ls.id = ? AND ls.expires_at > now() AND ls.revoked_at IS NULL AND ls.is_deleted = false AND u.is_deleted = false`, sessionId).
+		Take(&params).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, error2.LoginSessionNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &params, nil
 }

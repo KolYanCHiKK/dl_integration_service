@@ -3,7 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Вход — DataLake Bridge</title>
+    <title>Вход в приложение</title>
+    <!-- Значок вкладки: замок на фиолетовом фоне, встроен прямо в страницу -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235B3FD6'/%3E%3Cg transform='translate(4 4)' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='10' width='16' height='11' rx='2.5'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3'/%3E%3Ccircle cx='12' cy='15.5' r='1.4'/%3E%3C/g%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap">
     <style nonce="{{.Nonce}}">
@@ -20,9 +22,24 @@
         label{font-size:13px;font-weight:600}
         input[type=text],input[type=password]{height:46px;width:100%;border:1px solid #D9D3F2;border-radius:10px;padding:0 14px;font:inherit;font-size:15px;color:#1D1736;background:#FFFFFF}
         input:focus{outline:2px solid #5B3FD6;outline-offset:1px;border-color:#5B3FD6}
+        /* Незаполненное обязательное поле: красная рамка и подсказка под полем */
+        input[aria-invalid="true"]{border-color:#F04438;background:#FFFBFA}
+        input[aria-invalid="true"]:focus{outline-color:#F04438;border-color:#F04438}
+        .field-error{display:flex;align-items:center;gap:6px;margin:0;font-size:12px;line-height:1.4;font-weight:600;color:#B42318;animation:field-error-in .15s ease-out}
+        .field-error[hidden]{display:none}
+        .field-error svg{flex:none}
+        @keyframes field-error-in{from{opacity:0;transform:translateY(-3px)}}
         .pw{position:relative}
         .pw input{padding-right:48px}
-        .pw button{position:absolute;right:1px;top:1px;width:44px;height:44px;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:10px}
+        .pw button{position:absolute;right:1px;top:1px;width:44px;height:44px;border:0;background:transparent;color:#625C7A;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:9px;transition:background .15s,color .15s,transform .1s}
+        .pw button:hover{background:#F3F1F8;color:#1D1736}
+        .pw button:active{transform:scale(.9)}
+        .pw button:focus-visible{outline:2px solid #5B3FD6;outline-offset:-2px}
+        /* Пароль показан: перечёркнутый глаз в фиолетовом */
+        .pw button[aria-pressed="true"]{color:#5B3FD6}
+        .pw button[aria-pressed="true"]:hover{background:#EFEBFF}
+        .pw .icon-eye-off,.pw button[aria-pressed="true"] .icon-eye{display:none}
+        .pw button[aria-pressed="true"] .icon-eye-off{display:block}
         .submit{min-height:48px;border:0;border-radius:10px;background:#5B3FD6;color:#FFFFFF;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
         .submit:hover{background:#4528B8}
         .submit:disabled{background:#9C8BE6;cursor:default}
@@ -66,7 +83,7 @@
         @keyframes toast-timer{to{transform:scaleX(0)}}
         .toast .icon-success,.toast.success .icon-error{display:none}
         .toast.success .icon-success{display:block}
-        @media (prefers-reduced-motion:reduce){.toast{animation:none;transition:none}}
+        @media (prefers-reduced-motion:reduce){.toast,.field-error{animation:none;transition:none}}
     </style>
 </head>
 <body>
@@ -79,20 +96,34 @@
         <p class="sub">Приложение запрашивает доступ к вашему <br>корпоративному профилю</p>
     </div>
 
-    <form id="login-form" data-login-request-id="{{.LoginRequestID}}">
+    <!-- Адрес относительный, чтобы работать и за префиксом nginx, и напрямую.
+         Отправляет скрипт через fetch (JSON), action нужен только как адрес. -->
+    <!-- novalidate: вместо стандартной подсказки браузера показываем свою (.field-error) -->
+    <form id="login-form" method="POST" action="../users/login" novalidate>
+        <input type="hidden" name="loginRequestId" value="{{.LoginRequestID}}">
+
         <div class="field">
             <label for="username">Логин</label>
             <input id="username" name="username" type="text" autocomplete="username" placeholder="Введите логин" required autofocus>
+            <p class="field-error" id="username-error" hidden>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5"></path><path d="M12 16h.01"></path></svg>
+                <span>Укажите логин</span>
+            </p>
         </div>
 
         <div class="field">
             <label for="password">Пароль</label>
             <div class="pw">
                 <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Введите пароль" required>
-                <button id="pw-toggle" type="button" aria-label="Показать пароль">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#625C7A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                <button id="pw-toggle" type="button" aria-label="Показать пароль" aria-pressed="false">
+                    <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle><path d="M3 3l18 18"></path></svg>
                 </button>
             </div>
+            <p class="field-error" id="password-error" hidden>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5"></path><path d="M12 16h.01"></path></svg>
+                <span>Укажите пароль</span>
+            </p>
         </div>
 
         <button class="submit" type="submit">Войти</button>
@@ -126,13 +157,9 @@
     (function () {
         var form = document.getElementById('login-form');
         var submitBtn = form.querySelector('.submit');
-        var loginInput = document.getElementById('username');
         var passwordInput = document.getElementById('password');
         var toasts = document.getElementById('toasts');
         var toastTpl = document.getElementById('toast-tpl');
-
-        var ERROR_TITLE = 'Ошибка авторизации';
-        var REDIRECT_DELAY = 1500;
 
         // ---------- Уведомления ----------
 
@@ -156,13 +183,6 @@
             toasts.appendChild(toast);
         }
 
-        // Тексты из ответа {"bcode":..., "description":..., "errors":[...]}
-        function errorMessages(data) {
-            if (data && Array.isArray(data.errors) && data.errors.length) return data.errors;
-            if (data && data.description) return [data.description];
-            return ['Не удалось выполнить вход'];
-        }
-
         try {
             JSON.parse(toasts.dataset.notices || '[]').forEach(function (n) {
                 showToast(n.kind, n.title, n.text);
@@ -171,38 +191,108 @@
 
         // ---------- Показ пароля ----------
 
+        // aria-pressed переключает иконку и цвет кнопки (см. CSS .pw button[aria-pressed])
         document.getElementById('pw-toggle').addEventListener('click', function () {
             var show = passwordInput.type === 'password';
             passwordInput.type = show ? 'text' : 'password';
+            this.setAttribute('aria-pressed', show ? 'true' : 'false');
             this.setAttribute('aria-label', show ? 'Скрыть пароль' : 'Показать пароль');
         });
 
-        // ---------- Вход: POST /users/login ----------
+        // ---------- Вход: POST users/login с JSON ----------
+        //
+        // Успех:  200 {"redirectTo": "https://..."}         → зелёное уведомление, переход через 1 с
+        // Ошибка: не 2xx {"bcode":..,"description":..,"errors":[..]} → красное уведомление на каждый элемент errors
 
-        var busy = false;
+        var loginInput = document.getElementById('username');
+        var ERROR_TITLE = 'Ошибка авторизации';
+        var REDIRECT_DELAY = 1000; // мс до перехода после успешного входа
 
         function setBusy(value) {
-            busy = value;
             submitBtn.disabled = value;
             submitBtn.setAttribute('aria-busy', value ? 'true' : 'false');
         }
 
+        // Убираем уведомления прошлой попытки, чтобы не путались с новыми
+        function clearToasts() {
+            toasts.querySelectorAll('.toast').forEach(function (t) { t.remove(); });
+        }
+
+        function showErrors(messages) {
+            messages.forEach(function (m) { showToast('error', ERROR_TITLE, m); });
+        }
+
+        // Если errors пустой — берём description, если и его нет — общий текст
+        function errorMessages(data) {
+            if (data && Array.isArray(data.errors) && data.errors.length) return data.errors;
+            if (data && data.description) return [data.description];
+            return ['Не удалось выполнить вход'];
+        }
+
+        // Переходим только по http(s)-адресам, чтобы javascript:-ссылка из ответа не выполнилась
+        function safeURL(value) {
+            if (typeof value !== 'string' || !value) return null;
+            try {
+                var u = new URL(value, window.location.href);
+                return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // ---------- Проверка обязательных полей ----------
+
+        var requiredFields = [
+            { input: loginInput,    error: document.getElementById('username-error'), isEmpty: function () { return !loginInput.value.trim(); } },
+            { input: passwordInput, error: document.getElementById('password-error'), isEmpty: function () { return !passwordInput.value; } }
+        ];
+
+        function setFieldError(field, on) {
+            field.input.setAttribute('aria-invalid', on ? 'true' : 'false');
+            field.error.hidden = !on;
+            // Связываем подсказку с полем, только пока она видна, — её зачитает скринридер
+            if (on) field.input.setAttribute('aria-describedby', field.error.id);
+            else field.input.removeAttribute('aria-describedby');
+        }
+
+        // Подсвечивает все пустые поля и ставит фокус на первое. true — всё заполнено
+        function validateRequired() {
+            var firstEmpty = null;
+            requiredFields.forEach(function (f) {
+                var empty = f.isEmpty();
+                setFieldError(f, empty);
+                if (empty && !firstEmpty) firstEmpty = f;
+            });
+            if (firstEmpty) firstEmpty.input.focus();
+            return !firstEmpty;
+        }
+
+        // Подсказка пропадает, как только в поле что-то ввели
+        requiredFields.forEach(function (f) {
+            f.input.addEventListener('input', function () {
+                if (!f.isEmpty()) setFieldError(f, false);
+            });
+        });
 
         form.addEventListener('submit', async function (e) {
-            e.preventDefault();
-            if (busy) return;
+            e.preventDefault(); // форму отправляем сами, через fetch
+            if (submitBtn.disabled) return;
+            if (!validateRequired()) return;
             setBusy(true);
+            clearToasts();
 
             var body = {
                 credentials: {
                     login: loginInput.value.trim(),
                     password: passwordInput.value
                 },
-                loginRequestId: form.dataset.loginRequestId
+                loginRequestId: form.elements.loginRequestId.value
             };
 
+            var res;
             try {
-                var res = await fetch('/users/login', {
+                // form.action — адрес из атрибута action (../users/login), браузер уже сделал его полным
+                res = await fetch(form.action, {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: {
@@ -211,27 +301,36 @@
                     },
                     body: JSON.stringify(body)
                 });
-                var data = await res.json().catch(function () { return null; });
-
-                if (!res.ok) {
-                    errorMessages(data).forEach(function (m) { showToast('error', ERROR_TITLE, m); });
-                    passwordInput.value = '';
-                    passwordInput.focus();
-                    setBusy(false);
-                    return;
-                }
-
-                showToast('success', 'Вход выполнен', 'Вы успешно авторизовались');
-
-                // Куда идти дальше, сообщает сервер в поле redirectTo.
-                if (data && data.redirectTo) {
-                    setTimeout(function () { window.location.assign(data.redirectTo); }, REDIRECT_DELAY);
-                }
             } catch (err) {
-                showToast('error', ERROR_TITLE, 'Не удалось связаться с сервером. Проверьте подключение и попробуйте ещё раз.');
+                showErrors(['Не удалось связаться с сервером. Проверьте подключение и попробуйте ещё раз.']);
                 setBusy(false);
+                return;
             }
+
+            var data = await res.json().catch(function () { return null; });
+
+            if (!res.ok) {
+                showErrors(errorMessages(data));
+                passwordInput.value = '';
+                passwordInput.focus();
+                setBusy(false);
+                return;
+            }
+
+            var redirectTo = safeURL(data && data.redirectTo);
+            if (!redirectTo) {
+                showErrors(['Сервер не вернул адрес для перехода']);
+                setBusy(false);
+                return;
+            }
+
+            // Кнопка остаётся заблокированной до перехода
+            showToast('success', 'Вход выполнен', 'Вы успешно авторизовались');
+            setTimeout(function () { window.location.assign(redirectTo); }, REDIRECT_DELAY);
         });
+
+        // Возврат кнопкой «Назад» может поднять страницу из кэша с заблокированной кнопкой
+        window.addEventListener('pageshow', function () { setBusy(false); });
     })();
 </script>
 </body>

@@ -10,7 +10,7 @@ import (
 )
 
 func StartOauthServer(mux *chi.Mux, database *postgres.Db, applicationConfig *configs.ApplicationConfig) *logger2.DefaultErrorLogsParams {
-	err, errInfo := contract2.InitOauthHandlers(mux, database, applicationConfig.OauthFosite)
+	err, errInfo := contract2.InitOauthHandlers(mux, database, applicationConfig.OauthFosite, applicationConfig.JWTAuth)
 	if err != nil {
 		return &logger2.DefaultErrorLogsParams{Error: err, Info: errInfo}
 	}

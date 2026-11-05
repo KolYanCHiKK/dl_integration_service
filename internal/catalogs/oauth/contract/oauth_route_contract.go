@@ -19,7 +19,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *configs.FositeAuthConfig) (error, string) {
+func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *configs.FositeAuthConfig, authConfig *configs.AuthJwtConfig) (error, string) {
 	// Создаем объект шифрования для хранения сессии
 	key, err := base64.StdEncoding.DecodeString(strings.TrimSpace(fositeConfig.SessionEncKey))
 	if err != nil {
@@ -63,9 +63,10 @@ func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *confi
 
 	// Инициализация хендлеров
 	authv1.NewAuthorizeHandler(mux, &authv1.AuthorizeHandlerDeps{
-		Command: oauthCommand,
-		OAuth:   providerFosite,
-		Cipher:  cipher,
+		Command:    oauthCommand,
+		OAuth:      providerFosite,
+		AuthConfig: authConfig,
+		Cipher:     cipher,
 	})
 	tokenv1.NewTokenHandler(mux, &tokenv1.TokenHandlerDeps{
 		Command:     tokenCommand,

@@ -17,6 +17,7 @@ type AuthorizeHandlerDeps struct {
 	Command     *commands.AuthorizeCommand
 	OAuth       fosite.OAuth2Provider
 	OauthConfig *configs.FositeAuthConfig
+	AuthConfig  *configs.AuthJwtConfig
 	Cipher      *aead.Cipher
 }
 

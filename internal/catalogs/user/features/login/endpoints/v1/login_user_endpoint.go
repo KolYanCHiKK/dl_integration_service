@@ -79,6 +79,6 @@ func (ep *LoginUserEndpoint) handle() http.HandlerFunc {
 			SameSite: http.SameSiteLaxMode,
 		})
 
-		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+		rest2.BuildRestResponse(w, dtos.LoginUserResponse{RedirectTo: redirectURL}, 200, nil)
 	}
 }
