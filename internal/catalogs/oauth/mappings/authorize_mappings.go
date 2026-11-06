@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/models"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/constants/app"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oauth"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/user"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/utils"
+	"github.com/google/uuid"
 	"github.com/ory/fosite"
 	"gorm.io/datatypes"
 )
@@ -61,6 +63,7 @@ func MapClientGrantTypeToCommand(clientGrantType models.ClientGrantType) *Client
 type FositeRequestToDatabaseRequest struct {
 	FositeRequestID string
 	ClientID        string
+	LoginSessionId  *user.LoginSessionId
 	Subject         string
 	RequestedAt     time.Time
 	Form            datatypes.JSON
@@ -86,9 +89,17 @@ func MapFositeRequestToDatabaseRequest(fr fosite.Requester) (*FositeRequestToDat
 	requestAudience := utils.Uniq(fr.GetRequestedAudience())
 	grantedAudience := utils.Uniq(fr.GetGrantedAudience())
 
+	var loginSessionID *user.LoginSessionId
+	if mappedSession, ok := fr.GetSession().(*fosite.DefaultSession); ok {
+		if uuidSid, ok := mappedSession.Extra[app.LoginSessionExtraKey].(uuid.UUID); ok {
+			loginSessionID = &uuidSid
+		}
+	}
+
 	return &FositeRequestToDatabaseRequest{
 		FositeRequestID: fr.GetID(),
 		ClientID:        fr.GetClient().GetID(),
+		LoginSessionId:  loginSessionID,
 		Subject:         fr.GetSession().GetSubject(),
 		RequestedAt:     fr.GetRequestedAt(),
 		Form:            jsonForm,
@@ -101,6 +112,7 @@ func MapFositeRequestToDatabaseRequest(fr fosite.Requester) (*FositeRequestToDat
 }
 
 type DefaultSessionParameters struct {
-	Username string      `gorm:"column:login"`
-	Subject  user.UserId `gorm:"column:id"`
+	SessionID user.LoginSessionId `gorm:"column:session_id"`
+	Username  string              `gorm:"column:login"`
+	Subject   user.UserId         `gorm:"column:id"`
 }

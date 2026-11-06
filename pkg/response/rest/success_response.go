@@ -12,6 +12,10 @@ func BuildRestResponse(w http.ResponseWriter, body any, statusCode int, headerMa
 		AddCustomRestResponseHeaders(w, headerMap)
 	}
 
+	if body == nil && statusCode == http.StatusNoContent {
+		return
+	}
+
 	err := json.NewEncoder(w).Encode(body)
 	if err != nil {
 		GenerateInternalServerErrorResponse(w, nil, err.Error())

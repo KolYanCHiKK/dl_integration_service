@@ -21,36 +21,17 @@ func CreateEdpTables(db *gorm.DB) error {
 
 		// Проводим автомиграцию
 		if err := tx.AutoMigrate(
-			&user.User{},
-			&user.Role{},
-			&user.UserRole{},
-			&user.ClientRole{},
-			&user.PermissionTarget{},
-			&user.Permission{},
-			&user.Department{},
-			&user.LoginSession{},
+			&user.User{}, &user.Role{}, &user.UserRole{}, &user.ClientRole{},
+			&user.PermissionTarget{}, &user.Permission{}, &user.Department{}, &user.LoginSession{},
 			&user.LoginRequest{},
 
-			&models.Client{},
-			&models.ClientRedirectURI{},
-			&models.ClientGrantType{},
-			&models.ClientResponseType{},
-			&models.ClientScope{},
-			&models.Scope{},
-			&models.Resource{},
-			&models.ClientResource{},
-			&models.ClientSecretRotation{},
+			&models.Client{}, &models.ClientRedirectURI{}, &models.ClientPostLogoutRedirectURI{},
+			&models.ClientGrantType{}, &models.ClientResponseType{}, &models.ClientScope{},
+			&models.Scope{}, &models.Resource{}, &models.ClientResource{}, &models.ClientSecretRotation{},
 
-			&models.Request{},
-			&models.RequestScope{},
-			&models.RequestResource{},
-			&models.AuthorizeCode{},
-			&models.AccessToken{},
-			&models.RefreshToken{},
-			&models.PKCERequest{},
-			&models.OIDCSession{},
-			&models.JTIBlacklist{},
-			&models.SigningKey{},
+			&models.Request{}, &models.RequestScope{}, &models.RequestResource{}, &models.AuthorizeCode{},
+			&models.AccessToken{}, &models.RefreshToken{}, &models.PKCERequest{}, &models.OIDCSession{},
+			&models.JTIBlacklist{}, &models.SigningKey{},
 		); err != nil {
 			return err
 		}
@@ -68,36 +49,17 @@ func DropEdpTables(db *gorm.DB) error {
 		}
 
 		if err := tx.Migrator().DropTable(
-			&user.User{},
-			&user.Role{},
-			&user.UserRole{},
-			&user.ClientRole{},
-			&user.PermissionTarget{},
-			&user.Permission{},
-			&user.Department{},
-			&user.LoginSession{},
+			&user.User{}, &user.Role{}, &user.UserRole{}, &user.ClientRole{},
+			&user.PermissionTarget{}, &user.Permission{}, &user.Department{}, &user.LoginSession{},
 			&user.LoginRequest{},
 
-			&models.Client{},
-			&models.ClientRedirectURI{},
-			&models.ClientGrantType{},
-			&models.ClientResponseType{},
-			&models.ClientScope{},
-			&models.Scope{},
-			&models.Resource{},
-			&models.ClientResource{},
-			&models.ClientSecretRotation{},
+			&models.Client{}, &models.ClientRedirectURI{}, &models.ClientPostLogoutRedirectURI{},
+			&models.ClientGrantType{}, &models.ClientResponseType{}, &models.ClientScope{},
+			&models.Scope{}, &models.Resource{}, &models.ClientResource{}, &models.ClientSecretRotation{},
 
-			&models.Request{},
-			&models.RequestScope{},
-			&models.RequestResource{},
-			&models.AuthorizeCode{},
-			&models.AccessToken{},
-			&models.RefreshToken{},
-			&models.PKCERequest{},
-			&models.OIDCSession{},
-			&models.JTIBlacklist{},
-			&models.SigningKey{},
+			&models.Request{}, &models.RequestScope{}, &models.RequestResource{}, &models.AuthorizeCode{},
+			&models.AccessToken{}, &models.RefreshToken{}, &models.PKCERequest{}, &models.OIDCSession{},
+			&models.JTIBlacklist{}, &models.SigningKey{},
 		); err != nil {
 			return err
 		}

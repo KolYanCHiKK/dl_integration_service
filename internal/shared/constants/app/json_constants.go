@@ -6,3 +6,7 @@ var (
 	SuccessCreatedStatus app.CreatedResponseStatus = "success"
 	ErrorCreatedStatus   app.CreatedResponseStatus = "error"
 )
+
+var (
+	LoginSessionExtraKey string = "lsid"
+)

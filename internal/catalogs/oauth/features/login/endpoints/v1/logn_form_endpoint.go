@@ -19,7 +19,7 @@ func NewLoginEndpoint(params *LoginHandler) interfaces.Endpoint {
 }
 
 func (ep *LoginEndpoint) MapEndpoint() {
-	ep.Mux.Get("/form/login", ep.handle())
+	ep.Mux.Get("/oauth2/login", ep.handle())
 }
 
 func (ep *LoginEndpoint) handle() http.HandlerFunc {

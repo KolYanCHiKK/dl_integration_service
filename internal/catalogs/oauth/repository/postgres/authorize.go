@@ -144,11 +144,12 @@ func (p *Postgres) GetOauthRequestIDByFositeID(tx *gorm.DB, ctx context.Context,
 	return req.ID, true, nil
 }
 
-func (p *Postgres) CreateOauthRequest(tx *gorm.DB, ctx context.Context, fositeRequestId string, clientId string, subject string, requestedAt time.Time, form datatypes.JSON, session []byte) (*oauth.AuthRequestId, error) {
+func (p *Postgres) CreateOauthRequest(tx *gorm.DB, ctx context.Context, fositeRequestId string, clientId string, subject string, loginSessionId *user.LoginSessionId, requestedAt time.Time, form datatypes.JSON, session []byte) (*oauth.AuthRequestId, error) {
 	request := models.Request{
 		FositeRequestID: fositeRequestId,
 		ClientID:        clientId,
 		Subject:         subject,
+		LoginSessionID:  loginSessionId,
 		RequestedAt:     requestedAt,
 		Form:            form,
 		Session:         session,
@@ -208,7 +209,7 @@ func (p *Postgres) CreateRequestScopes(tx *gorm.DB, ctx context.Context, request
 		rows = append(rows, models.RequestScope{
 			RequestID: requestId,
 			Kind:      kind,
-			ScopeId:   s,
+			ScopeID:   s,
 		})
 	}
 
@@ -391,7 +392,7 @@ func (p *Postgres) CreateLoginRequest(ctx context.Context, redirectLoginURI stri
 func (p *Postgres) GetDefaultSessionParameters(ctx context.Context, sessionId user.LoginSessionId) (*mappings.DefaultSessionParameters, error) {
 	var params mappings.DefaultSessionParameters
 
-	err := p.WithContext(ctx).Select("u.login, u.id").
+	err := p.WithContext(ctx).Select("u.login, u.id, ls.id AS session_id").
 		Table(`"edp"."login_session" AS ls`).Joins(`JOIN "edp"."user" AS u ON u.id = ls.user_id`).
 		Where(`ls.id = ? AND ls.expires_at > now() AND ls.revoked_at IS NULL AND ls.is_deleted = false AND u.is_deleted = false`, sessionId).
 		Take(&params).Error

@@ -21,8 +21,8 @@ type Client struct {
 	AccessTokenTTLSeconds  *int               `gorm:"column:access_token_ttl_seconds"`
 	RefreshTokenTTLSeconds *int               `gorm:"column:refresh_token_ttl_seconds"`
 	IsDeleted              bool               `gorm:"not null;type:boolean;default:false"`
-	CreatedAt              time.Time          `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt              time.Time          `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	CreatedAt              time.Time          `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt              time.Time          `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 }
 
 func (Client) TableName() string {
@@ -34,14 +34,29 @@ type ClientRedirectURI struct {
 	ClientID  oauth.ClientId            `gorm:"type:uuid;not null;uniqueIndex:ux_client_redirect_uri"`
 	URI       string                    `gorm:"size:1024;not null;uniqueIndex:ux_client_redirect_uri"`
 	IsDeleted bool                      `gorm:"not null;type:boolean;default:false"`
-	CreatedAt time.Time                 `gorm:"not null;type:timestamptz;autoCreateTime"`
-	UpdatedAt time.Time                 `gorm:"not null;type:timestamptz;autoUpdateTime"`
+	CreatedAt time.Time                 `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt time.Time                 `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 
 	Client *Client `gorm:"foreignKey:ClientID;constraint:OnDelete:CASCADE"`
 }
 
 func (ClientRedirectURI) TableName() string {
 	return "edp.client_redirect_uri"
+}
+
+type ClientPostLogoutRedirectURI struct {
+	ID        oauth.ClientPostLogoutRedirectURIId `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	ClientID  oauth.ClientId                      `gorm:"type:uuid;not null;index:ux_client_post_logout_uri,unique"`
+	URI       string                              `gorm:"size:2048;not null;index:ux_client_post_logout_uri,unique"`
+	IsDeleted bool                                `gorm:"not null;type:boolean;default:false"`
+	CreatedAt time.Time                           `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt time.Time                           `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
+
+	Client *Client `gorm:"foreignKey:ClientID;constraint:OnDelete:CASCADE"`
+}
+
+func (ClientPostLogoutRedirectURI) TableName() string {
+	return "edp.client_post_logout_redirect_uri"
 }
 
 type ClientGrantType struct {

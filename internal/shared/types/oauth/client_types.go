@@ -8,6 +8,7 @@ type ClientId = uuid.UUID
 type AuthMethod = string
 
 type ClientRedirectUriId = uuid.UUID
+type ClientPostLogoutRedirectURIId = uuid.UUID
 
 type ClientGrantTypeId = uuid.UUID
 type GrantType = string

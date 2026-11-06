@@ -238,6 +238,7 @@ func (c *AuthorizeCommand) EnsureRequest(tx *gorm.DB, ctx context.Context, reque
 		request.FositeRequestID,
 		request.ClientID,
 		request.Subject,
+		request.LoginSessionId,
 		request.RequestedAt,
 		request.Form,
 		encSession,

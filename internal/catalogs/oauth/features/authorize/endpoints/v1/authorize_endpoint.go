@@ -7,6 +7,7 @@ import (
 
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/connection/interfaces"
 	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/error"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/constants/app"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
 	"github.com/google/uuid"
 	"github.com/ory/fosite"
@@ -85,6 +86,7 @@ func (ep *AuthorizeEndpoint) handle() http.HandlerFunc {
 		session := fosite.DefaultSession{
 			Username: sessionParams.Username,
 			Subject:  sessionParams.Subject.String(),
+			Extra:    map[string]any{app.LoginSessionExtraKey: sessionParams.SessionID},
 		}
 
 		authResp, err := ep.Dependents.OAuth.NewAuthorizeResponse(r.Context(), authReq, &session)
@@ -123,5 +125,5 @@ func (ep *AuthorizeEndpoint) redirectToLoginForm(w http.ResponseWriter, r *http.
 	query.Set("request", loginRequestId.String())
 
 	w.Header().Set("Cache-Control", "no-store")
-	http.Redirect(w, r, "/form/login?"+query.Encode(), http.StatusSeeOther)
+	http.Redirect(w, r, "/oauth2/login?"+query.Encode(), http.StatusSeeOther)
 }

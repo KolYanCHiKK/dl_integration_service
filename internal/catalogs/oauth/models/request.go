@@ -4,20 +4,22 @@ import (
 	"time"
 
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oauth"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/user"
 	"gorm.io/datatypes"
 )
 
 type Request struct {
-	ID              oauth.AuthRequestId `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	FositeRequestID string              `gorm:"size:64;not null;index"`                  // ID запроса от fosite: общий для code/access/refresh одной выдачи. НЕ уникален
-	ClientID        string              `gorm:"type:uuid;not null;index"`                // Client_id строкой (fosite работает со строками)
-	Subject         string              `gorm:"size:64;not null;index"`                  // Users.id строкой
-	RequestedAt     time.Time           `gorm:"type:timestamptz;not null;default:now()"` // Время получения исходного запроса
-	Form            datatypes.JSON      `gorm:"type:jsonb;not null"`                     // Url.Values исходного запроса
-	Session         []byte              `gorm:"type:bytea;not null"`                     // Сохранённое внутреннее состояние fosite для конкретного OAuth-запроса
-	IsDeleted       bool                `gorm:"not null;type:boolean;default:false"`
-	CreatedAt       time.Time           `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
-	UpdatedAt       time.Time           `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
+	ID              oauth.AuthRequestId  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	FositeRequestID string               `gorm:"size:64;not null;index"`                  // ID запроса от fosite: общий для code/access/refresh одной выдачи. НЕ уникален
+	ClientID        string               `gorm:"type:uuid;not null;index"`                // Client_id строкой (fosite работает со строками)
+	LoginSessionID  *user.LoginSessionId `gorm:"type:uuid;index"`                         // ID сессии авторизации пользователя
+	Subject         string               `gorm:"size:64;not null;index"`                  // Users.id строкой
+	RequestedAt     time.Time            `gorm:"type:timestamptz;not null;default:now()"` // Время получения исходного запроса
+	Form            datatypes.JSON       `gorm:"type:jsonb;not null"`                     // Url.Values исходного запроса
+	Session         []byte               `gorm:"type:bytea;not null"`                     // Сохранённое внутреннее состояние fosite для конкретного OAuth-запроса
+	IsDeleted       bool                 `gorm:"not null;type:boolean;default:false"`
+	CreatedAt       time.Time            `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt       time.Time            `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 }
 
 func (Request) TableName() string { return "edp.oauth_request" }
@@ -26,12 +28,12 @@ type RequestScope struct {
 	ID        oauth.RequestScopeId   `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	RequestID oauth.AuthRequestId    `gorm:"type:uuid;uniqueIndex:ux_request_scope_kind"`
 	Kind      oauth.RequestScopeKind `gorm:"size:16;uniqueIndex:ux_request_scope_kind;check:chk_request_scope_kind,kind IN ('requested','granted')"`
-	ScopeId   oauth.ScopeId          `gorm:"type:uuid;uniqueIndex:ux_request_scope_kind"` // Scope прямо с запроса и ответа
+	ScopeID   oauth.ScopeId          `gorm:"type:uuid;uniqueIndex:ux_request_scope_kind"` // Scope прямо с запроса и ответа
 	IsDeleted bool                   `gorm:"not null;type:boolean;default:false"`
 	CreatedAt time.Time              `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
 	UpdatedAt time.Time              `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 
-	Scope   *Scope   `gorm:"foreignKey:ScopeId;constraint:OnUpdate:CASCADE"`
+	Scope   *Scope   `gorm:"foreignKey:ScopeID;constraint:OnDelete:CASCADE"`
 	Request *Request `gorm:"foreignKey:RequestID;constraint:OnDelete:CASCADE"`
 }
 

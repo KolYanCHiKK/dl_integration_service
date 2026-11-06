@@ -5,9 +5,13 @@ import (
 	"errors"
 	"time"
 
+	error3 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/error"
+	models2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/models"
 	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/error"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/mappings"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/models"
+	oauth2 "github.com/KolYanCHiKK/dl_integration_service/internal/shared/constants/oauth"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oauth"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/user"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -61,4 +65,44 @@ func (p *Postgres) LoginUser(tx *gorm.DB, ctx context.Context, userId user.UserI
 	}
 
 	return &session.ID, loginRequest.RedirectURL, nil
+}
+
+func (p *Postgres) IsValidClientID(ctx context.Context, clientID oauth.ClientId) error {
+	var client models2.Client
+	err := p.WithContext(ctx).Where("id = ? AND status = ? AND is_deleted = false", clientID, oauth2.ClientStatusActive).
+		First(&client).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return error3.ClientNotFound
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Postgres) GetClientLogoutRedirectURI(ctx context.Context, clientID oauth.ClientId) ([]string, error) {
+	var redirectUris []string
+	err := p.WithContext(ctx).Model(&models2.ClientPostLogoutRedirectURI{}).
+		Where("client_id = ? AND is_deleted = false", clientID).
+		Pluck("uri", &redirectUris).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return redirectUris, nil
+}
+
+func (p *Postgres) LogoutUser(ctx context.Context, sessionID user.LoginSessionId) error {
+	result := p.WithContext(ctx).Model(&models.LoginSession{}).
+		Where("id = ? AND revoked_at IS NULL AND is_deleted = false", sessionID).
+		Update("revoked_at", time.Now().UTC())
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }

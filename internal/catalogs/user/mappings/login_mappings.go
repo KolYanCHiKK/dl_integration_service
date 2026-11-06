@@ -3,6 +3,7 @@ package mappings
 import (
 	"time"
 
+	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oauth"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/user"
 )
 
@@ -22,4 +23,10 @@ type UserLoginParams struct {
 	UserId       user.UserId `gorm:"column:id"`
 	UserName     string      `gorm:"column:login"`
 	UserPassword string      `gorm:"column:hashed_password"`
+}
+
+type LogoutUserParams struct {
+	SessionId   user.LoginSessionId
+	ClientId    oauth.ClientId
+	RedirectUri string
 }
