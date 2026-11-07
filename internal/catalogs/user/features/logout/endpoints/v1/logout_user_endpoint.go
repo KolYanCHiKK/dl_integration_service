@@ -3,6 +3,7 @@ package v1
 import (
 	"errors"
 	"net/http"
+	url2 "net/url"
 
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/connection/interfaces"
 	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/error"
@@ -75,7 +76,20 @@ func (ep *LogoutUserEndpoint) handle() http.HandlerFunc {
 			return
 		}
 
-		http.Redirect(w, r, redirectUri, http.StatusSeeOther)
+		url, err := url2.Parse(redirectUri)
+		if err != nil {
+			rest.GenerateBadRequestResponse(w, nil, "Ошибка обработки URI для редиректа", err.Error())
+			return
+		}
+
+		if code := r.PostFormValue("state"); code != "" {
+			q := url.Query()
+			q.Set("state", code)
+			url.RawQuery = q.Encode()
+
+		}
+
+		http.Redirect(w, r, url.String(), http.StatusSeeOther)
 	}
 }
 

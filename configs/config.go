@@ -44,6 +44,7 @@ type AuthJwtConfig struct {
 	LoginSessionTTl time.Duration // Время жизни сессии пользователя
 	LoginRequestTTL time.Duration // Время жизни запроса на ввод логина и пароля
 	Issuer          string        // Система, которая выпустила токен
+	JWKEncKey       string        // Ключ шифрования для JWK
 }
 
 type FositeAuthConfig struct {
@@ -122,6 +123,7 @@ func (a *AuthJwtConfig) RunAuthConfigWithEnv() error {
 		LoginSessionTTl: r.duration("LOGIN_SESSION_TTL"),
 		LoginRequestTTL: r.duration("LOGIN_REQUEST_TTL"),
 		Issuer:          r.str("JWT_ISSUER"),
+		JWKEncKey:       r.str("JWK_ENC_KEY"),
 	}
 
 	if r.err != nil {
