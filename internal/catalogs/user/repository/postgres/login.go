@@ -50,13 +50,14 @@ func (p *Postgres) LoginUser(tx *gorm.DB, ctx context.Context, userId user.UserI
 
 	// Создаем сессию
 	session := models.LoginSession{
-		UserID:    userId,
-		AuthTime:  sessionParams.AuthTime,
-		IP:        sessionParams.IP,
-		UserAgent: sessionParams.UserAgent,
-		ExpiresAt: sessionParams.ExpiresAt,
-		RevokedAt: nil,
-		IsDeleted: false,
+		LoginRequestID: sessionParams.LoginRequest,
+		UserID:         userId,
+		AuthTime:       sessionParams.AuthTime,
+		IP:             sessionParams.IP,
+		UserAgent:      sessionParams.UserAgent,
+		ExpiresAt:      sessionParams.ExpiresAt,
+		RevokedAt:      nil,
+		IsDeleted:      false,
 	}
 
 	err := tx.WithContext(ctx).Create(&session).Error

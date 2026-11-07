@@ -37,7 +37,7 @@ func MapSigningKeyDTOParamsToDTO(params *SigningKeyDTOParams) *dtos.JWKCreateRes
 	return &dtos.JWKCreateResponseDTO{
 		Key:       params.PublicJWK,
 		Status:    params.Status,
-		NotBefore: params.NotBefore,
-		CreatedAt: params.CreatedAt,
+		NotBefore: params.NotBefore.UTC(),
+		CreatedAt: params.CreatedAt.UTC(),
 	}
 }

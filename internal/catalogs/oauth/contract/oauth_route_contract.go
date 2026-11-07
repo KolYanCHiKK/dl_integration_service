@@ -7,6 +7,8 @@ import (
 	"github.com/KolYanCHiKK/dl_integration_service/configs"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/authorize/commands"
 	authv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/authorize/endpoints/v1"
+	commands4 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/jwk/commands"
+	jwkv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/jwk/endpoints/v1"
 	commands3 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/login/commands"
 	loginv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/login/endpoints/v1"
 	commands2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/token/commands"
@@ -38,6 +40,7 @@ func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *confi
 	oauthCommand := commands.NewAuthorizeCommand(oauthPostgresRepository, cipher)
 	tokenCommand := commands2.NewTokenCommand(oauthPostgresRepository, oauthCommand)
 	loginCommand := commands3.LoginCommand{}
+	jwkCommand := commands4.NewJWKCommand(oauthPostgresRepository)
 
 	// Инициализация fosite
 	providerFosite, err := provider.NewProvider(
@@ -77,6 +80,10 @@ func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *confi
 	loginv1.NewLoginHandler(mux, &loginv1.LoginHandlerDeps{
 		Command: loginCommand,
 	})
+
+	jwkv1.NewJWKHandlerHandler(mux,
+		&jwkv1.JWKHandlerDeps{Command: jwkCommand},
+	)
 
 	return nil, ""
 }

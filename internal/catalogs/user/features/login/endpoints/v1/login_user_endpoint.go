@@ -47,7 +47,7 @@ func (ep *LoginUserEndpoint) handle() http.HandlerFunc {
 		sessionId, redirectURL, err := ep.Dependents.Command.LoginUser(
 			r.Context(),
 			&mappings.LoginRequestParams{
-				LoginRequest: body.LoginRequestId,
+				LoginRequest: &body.LoginRequestId,
 				IP:           utils.GetClientIP(r, ep.Dependents.NetworkConfig.TrustedProxies),
 				UserAgent:    r.Header.Get("User-Agent"),
 				ExpiresAt:    time.Now().Add(ep.Dependents.AuthConfig.LoginSessionTTl),

@@ -139,18 +139,21 @@ func (RolePermission) TableName() string {
 }
 
 type LoginSession struct {
-	ID        user.LoginSessionId `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	UserID    user.UserId         `gorm:"type:uuid;not null;index"`
-	AuthTime  time.Time           `gorm:"not null;type:timestamptz"`
-	IP        string              `gorm:"size:45"`
-	UserAgent string              `gorm:"size:512"`
-	ExpiresAt time.Time           `gorm:"not null;type:timestamptz;index"`
-	RevokedAt *time.Time          `gorm:"type:timestamptz"`
-	IsDeleted bool                `gorm:"not null;type:boolean;default:false"`
-	CreatedAt time.Time           `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
-	UpdatedAt time.Time           `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
+	ID             user.LoginSessionId  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	UserID         user.UserId          `gorm:"type:uuid;not null;index"`
+	LoginRequestID *user.LoginRequestId `gorm:"type:uuid"`
+	AuthTime       time.Time            `gorm:"not null;type:timestamptz"`
+	IP             string               `gorm:"size:45"`
+	UserAgent      string               `gorm:"size:512"`
+	ExpiresAt      time.Time            `gorm:"not null;type:timestamptz;index"`
+	RevokedAt      *time.Time           `gorm:"type:timestamptz"`
+	IsDeleted      bool                 `gorm:"not null;type:boolean;default:false"`
+	CreatedAt      time.Time            `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt      time.Time            `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 
-	User *User `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	User          *User                `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	LoginRequest  *LoginRequest        `gorm:"foreignKey:LoginRequestID;constraint:OnDelete:CASCADE"`
+	OauthRequests []oauthmodel.Request `gorm:"foreignKey:LoginSessionID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 func (LoginSession) TableName() string {

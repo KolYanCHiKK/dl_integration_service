@@ -13,7 +13,7 @@ type SessionParams struct {
 }
 
 type LoginRequestParams struct {
-	LoginRequest user.LoginRequestId
+	LoginRequest *user.LoginRequestId
 	AuthTime     time.Time
 	IP           string
 	UserAgent    string

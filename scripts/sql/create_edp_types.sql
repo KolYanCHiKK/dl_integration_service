@@ -49,3 +49,16 @@ BEGIN
         ('code', 'id_token', 'token');
     END IF;
 END $$;
+
+-- Создание типа: signing_status_enum
+DO $$
+BEGIN
+	IF NOT EXISTS (
+		SELECT 1 FROM pg_type t
+		JOIN pg_namespace n ON n.oid = t.typnamespace
+		WHERE t.typname = 'signing_status_enum' AND n.nspname = 'edp'
+	) THEN
+CREATE TYPE edp.signing_status_enum AS ENUM
+    ('active', 'retiring', 'retired');
+END IF;
+END $$;

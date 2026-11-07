@@ -146,14 +146,14 @@ func (JTIBlacklist) TableName() string {
 
 type SigningKey struct {
 	ID            oauth.SigningKeyId     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	KID           string                 `gorm:"size:64;not null;uniqueIndex"`                                                                                 // Идентификатор ключа, попадает в заголовок JWT. Не переиспользуется, поэтому индекс не частичный
-	Algorithm     string                 `gorm:"size:16;not null;check:chk_signing_key_algorithm,algorithm IN ('RS256','PS256','ES256')"`                      // Алгоритм подписи
-	PublicJWK     datatypes.JSON         `gorm:"type:jsonb;not null"`                                                                                          // Публичная часть в формате JWK, отдаётся в JWKS endpoint
-	PrivateKeyEnc []byte                 `gorm:"type:bytea;not null"`                                                                                          // Приватный ключ, зашифрованный мастер-ключом (KMS/HSM). В открытом виде не хранить
-	Status        oauth.SigningKeyStatus `gorm:"size:16;not null;default:active;index;check:chk_signing_key_status,status IN ('active','retiring','retired')"` // active подписывает, retiring только проверяется, retired убран из JWKS
-	NotBefore     time.Time              `gorm:"type:timestamptz;not null"`                                                                                    // С какого момента ключ можно использовать
-	RotatedAt     *time.Time             `gorm:"type:timestamptz"`                                                                                             // Когда ключ перестал быть активным
-	RetireAfter   *time.Time             `gorm:"type:timestamptz;index"`                                                                                       // Когда перевести в retired (после истечения последних токенов)
+	KID           string                 `gorm:"size:64;not null;uniqueIndex"`                                                            // Идентификатор ключа, попадает в заголовок JWT. Не переиспользуется, поэтому индекс не частичный
+	Algorithm     string                 `gorm:"size:16;not null;check:chk_signing_key_algorithm,algorithm IN ('RS256','PS256','ES256')"` // Алгоритм подписи
+	PublicJWK     datatypes.JSON         `gorm:"type:jsonb;not null"`                                                                     // Публичная часть в формате JWK, отдаётся в JWKS endpoint
+	PrivateKeyEnc []byte                 `gorm:"type:bytea;not null"`                                                                     // Приватный ключ, зашифрованный мастер-ключом (KMS/HSM). В открытом виде не хранить
+	Status        oauth.SigningKeyStatus `gorm:"type:edp.signing_status_enum;size:16;not null;default:active;index"`                      // active подписывает, retiring только проверяется, retired убран из JWKS
+	NotBefore     time.Time              `gorm:"type:timestamptz;not null"`                                                               // С какого момента ключ можно использовать
+	RotatedAt     *time.Time             `gorm:"type:timestamptz"`                                                                        // Когда ключ перестал быть активным
+	RetireAfter   *time.Time             `gorm:"type:timestamptz;index"`                                                                  // Когда перевести в retired (после истечения последних токенов)
 	IsDeleted     bool                   `gorm:"not null;type:boolean;default:false"`
 	CreatedAt     time.Time              `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
 	UpdatedAt     time.Time              `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`

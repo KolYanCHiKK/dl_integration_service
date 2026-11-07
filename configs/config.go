@@ -38,13 +38,14 @@ type DBPostgresConfig struct {
 }
 
 type AuthJwtConfig struct {
-	SecretKey       string        // Секретный ключ
-	AccessTokenTTL  time.Duration // Время жизни токена
-	RefreshTokenTTL time.Duration // Время жизни рефреш токена
-	LoginSessionTTl time.Duration // Время жизни сессии пользователя
-	LoginRequestTTL time.Duration // Время жизни запроса на ввод логина и пароля
-	Issuer          string        // Система, которая выпустила токен
-	JWKEncKey       string        // Ключ шифрования для JWK
+	SecretKey           string        // Секретный ключ
+	AccessTokenTTL      time.Duration // Время жизни токена
+	RefreshTokenTTL     time.Duration // Время жизни рефреш токена
+	LoginSessionTTl     time.Duration // Время жизни сессии пользователя
+	LoginRequestTTL     time.Duration // Время жизни запроса на ввод логина и пароля
+	Issuer              string        // Система, которая выпустила токен
+	JWKEncKey           string        // Ключ шифрования для JWK
+	JWKRotationInterval time.Duration // Срок ротации для JWK из retiring в retired
 }
 
 type FositeAuthConfig struct {
@@ -117,13 +118,14 @@ func (a *AuthJwtConfig) RunAuthConfigWithEnv() error {
 	r := &envReader{}
 
 	cfg := AuthJwtConfig{
-		SecretKey:       r.str("JWT_SECRET_KEY"),
-		AccessTokenTTL:  r.duration("JWT_ACCESS_TTL"),
-		RefreshTokenTTL: r.duration("JWT_REFRESH_TTL"),
-		LoginSessionTTl: r.duration("LOGIN_SESSION_TTL"),
-		LoginRequestTTL: r.duration("LOGIN_REQUEST_TTL"),
-		Issuer:          r.str("JWT_ISSUER"),
-		JWKEncKey:       r.str("JWK_ENC_KEY"),
+		SecretKey:           r.str("JWT_SECRET_KEY"),
+		AccessTokenTTL:      r.duration("JWT_ACCESS_TTL"),
+		RefreshTokenTTL:     r.duration("JWT_REFRESH_TTL"),
+		LoginSessionTTl:     r.duration("LOGIN_SESSION_TTL"),
+		LoginRequestTTL:     r.duration("LOGIN_REQUEST_TTL"),
+		Issuer:              r.str("JWT_ISSUER"),
+		JWKEncKey:           r.str("JWK_ENC_KEY"),
+		JWKRotationInterval: r.duration("JWK_ROTATION_INTERVAL"),
 	}
 
 	if r.err != nil {

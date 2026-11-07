@@ -1,11 +1,8 @@
 package v1
 
 import (
-	"github.com/KolYanCHiKK/dl_integration_service/configs"
-	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/authorize/commands"
-	"github.com/KolYanCHiKK/dl_integration_service/pkg/crypt/aead"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/jwk/commands"
 	"github.com/go-chi/chi/v5"
-	"github.com/ory/fosite"
 )
 
 type JWKHandler struct {
@@ -14,18 +11,14 @@ type JWKHandler struct {
 }
 
 type JWKHandlerDeps struct {
-	Command     *commands.AuthorizeCommand
-	OAuth       fosite.OAuth2Provider
-	OauthConfig *configs.FositeAuthConfig
-	AuthConfig  *configs.AuthJwtConfig
-	Cipher      *aead.Cipher
+	Command *commands.JWKCommand
 }
 
-func NewAuthorizeHandler(mux *chi.Mux, deps *JWKHandlerDeps) {
+func NewJWKHandlerHandler(mux *chi.Mux, deps *JWKHandlerDeps) {
 	handler := &JWKHandler{
 		Mux:        mux,
 		Dependents: deps,
 	}
 
-	NewAuthorizeEndpoint(handler).MapEndpoint()
+	NewJWKEndpoint(handler).MapEndpoint()
 }
