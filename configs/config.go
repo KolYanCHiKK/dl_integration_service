@@ -49,15 +49,16 @@ type AuthJwtConfig struct {
 }
 
 type FositeAuthConfig struct {
-	SessionEncKey         string // Ключ шифрования для сохранения сессии
-	FositeGlobalSecret    string // Ключ шифрования для кодов авторизации
-	AccessTokenIssuer     string
-	TokenURL              string
-	ScopeStrategy         func(haystack []string, needle string) bool
-	AuthorizeCodeLifespan time.Duration
-	AccessTokenLifespan   time.Duration
-	RefreshTokenLifespan  time.Duration
-	EnforcePKCE           bool
+	SessionEncKey               string // Ключ шифрования для сохранения сессии
+	FositeGlobalSecret          string // Ключ шифрования для кодов авторизации
+	AccessTokenIssuer           string
+	TokenURL                    string
+	ScopeStrategy               func(haystack []string, needle string) bool
+	AuthorizeCodeLifespan       time.Duration
+	AccessTokenLifespan         time.Duration
+	RefreshTokenLifespan        time.Duration
+	EnforcePKCE                 bool
+	EnforcePKCEForPublicClients bool
 }
 
 type NetworkConfig struct {
@@ -140,15 +141,16 @@ func (f *FositeAuthConfig) RunFositeConfigWithEnv() error {
 	r := &envReader{}
 
 	cfg := FositeAuthConfig{
-		SessionEncKey:         r.str("SESSION_ENC_KEY"),
-		FositeGlobalSecret:    r.str("FOSITE_GLOBAL_SECRET"),
-		AccessTokenIssuer:     r.str("ACCESS_TOKEN_ISSUER"),
-		TokenURL:              r.str("TOKEN_URL"),
-		ScopeStrategy:         fosite.ExactScopeStrategy,
-		AuthorizeCodeLifespan: r.duration("AUTHORIZE_CODE_LIFESPAN"),
-		AccessTokenLifespan:   r.duration("JWT_ACCESS_TTL"),
-		RefreshTokenLifespan:  r.duration("JWT_REFRESH_TTL"),
-		EnforcePKCE:           r.bool("ENFORCE_PKCE"),
+		SessionEncKey:               r.str("SESSION_ENC_KEY"),
+		FositeGlobalSecret:          r.str("FOSITE_GLOBAL_SECRET"),
+		AccessTokenIssuer:           r.str("ACCESS_TOKEN_ISSUER"),
+		TokenURL:                    r.str("TOKEN_URL"),
+		ScopeStrategy:               fosite.ExactScopeStrategy,
+		AuthorizeCodeLifespan:       r.duration("AUTHORIZE_CODE_LIFESPAN"),
+		AccessTokenLifespan:         r.duration("JWT_ACCESS_TTL"),
+		RefreshTokenLifespan:        r.duration("JWT_REFRESH_TTL"),
+		EnforcePKCE:                 r.bool("ENFORCE_PKCE"),
+		EnforcePKCEForPublicClients: r.bool("ENFORCE_PKCE_FOR_PUBLIC_CLIENTS"),
 	}
 
 	if r.err != nil {

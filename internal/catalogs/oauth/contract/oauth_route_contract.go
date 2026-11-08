@@ -11,6 +11,8 @@ import (
 	jwkv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/jwk/endpoints/v1"
 	commands3 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/login/commands"
 	loginv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/login/endpoints/v1"
+	commands5 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/openid/commands"
+	openidv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/openid/endpoints/v1"
 	commands2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/token/commands"
 	tokenv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/token/endpoints/v1"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/repository/postgres"
@@ -41,6 +43,7 @@ func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *confi
 	tokenCommand := commands2.NewTokenCommand(oauthPostgresRepository, oauthCommand)
 	loginCommand := commands3.LoginCommand{}
 	jwkCommand := commands4.NewJWKCommand(oauthPostgresRepository)
+	openIDCommand := commands5.NewOpenIDCommand(oauthPostgresRepository)
 
 	// Инициализация fosite
 	providerFosite, err := provider.NewProvider(
@@ -48,14 +51,7 @@ func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *confi
 			AuthorizeCommand: oauthCommand,
 			TokenCommand:     tokenCommand,
 		},
-		fositeConfig.AccessTokenIssuer,
-		[]byte(fositeConfig.FositeGlobalSecret),
-		fositeConfig.TokenURL,
-		fositeConfig.ScopeStrategy,
-		fositeConfig.AuthorizeCodeLifespan,
-		fositeConfig.AccessTokenLifespan,
-		fositeConfig.RefreshTokenLifespan,
-		fositeConfig.EnforcePKCE,
+		fositeConfig,
 	)
 
 	if err != nil {
@@ -84,6 +80,11 @@ func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *confi
 	jwkv1.NewJWKHandlerHandler(mux,
 		&jwkv1.JWKHandlerDeps{Command: jwkCommand},
 	)
+
+	openidv1.NewJOpenIDHandler(mux, &openidv1.OpenIDHandlerDeps{
+		Command:      openIDCommand,
+		FositeConfig: fositeConfig,
+	})
 
 	return nil, ""
 }

@@ -6,6 +6,7 @@ import (
 	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/error"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/models"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/constants/oauth"
+	oauth2 "github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oauth"
 	"gorm.io/datatypes"
 )
 
@@ -25,4 +26,16 @@ func (p *Postgres) GetJWKSigningKey(ctx context.Context) ([]datatypes.JSON, erro
 	}
 
 	return signingKeysJSON, nil
+}
+
+func (p *Postgres) GetAllScopes(ctx context.Context) ([]oauth2.ScopeName, error) {
+	var scopeName []oauth2.ScopeName
+	err := p.WithContext(ctx).Where("is_deleted = false").
+		Model(&models.Scope{}).Order("name").Pluck("name", &scopeName).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return scopeName, nil
 }

@@ -12,15 +12,15 @@ type OpenIDHandler struct {
 }
 
 type OpenIDHandlerDeps struct {
-	Command *commands.OpenIDCommand
-	JWTAuth *configs.AuthJwtConfig
+	Command      *commands.OpenIDCommand
+	FositeConfig *configs.FositeAuthConfig
 }
 
-func NewJWKHandlerHandler(mux *chi.Mux, deps *OpenIDHandlerDeps) {
+func NewJOpenIDHandler(mux *chi.Mux, deps *OpenIDHandlerDeps) {
 	handler := &OpenIDHandler{
 		Mux:        mux,
 		Dependents: deps,
 	}
 
-	NewAuthorizeEndpoint(handler).MapEndpoint()
+	NewOpenIDEndpoint(handler).MapEndpoint()
 }
