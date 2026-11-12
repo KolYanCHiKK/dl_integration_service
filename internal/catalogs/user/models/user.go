@@ -48,6 +48,7 @@ func (User) TableName() string {
 
 type Role struct {
 	ID          user.RoleId `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	Code        string      `gorm:"size:32;not null;uniqueIndex"`
 	Name        string      `gorm:"size:100;not null;uniqueIndex"`
 	Description string      `gorm:"size:255"`
 	IsSystem    bool        `gorm:"not null;type:boolean;default:false"`
@@ -92,39 +93,23 @@ func (UserRole) TableName() string {
 	return "edp.user_role"
 }
 
-type PermissionTarget struct {
-	ID          user.PermissionTargetId `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	Code        string                  `gorm:"size:255;not null;index:ux_name_client_id,unique"`
-	ClientID    oauthtypes.ClientId     `gorm:"type:uuid;not null;index:ux_name_client_id,unique"`
-	Description string                  `gorm:"size:255"`
-	IsDeleted   bool                    `gorm:"not null;type:boolean;default:false"`
-	CreatedAt   time.Time               `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
-	UpdatedAt   time.Time               `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
+type Permission struct {
+	ID          user.PermissionId   `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	Code        string              `gorm:"size:32;not null;index:ux_code_client_id,unique"`
+	Description string              `gorm:"size:255"`
+	ClientID    oauthtypes.ClientId `gorm:"type:uuid;not null;index:ux_code_client_id,unique"`
+	IsDeleted   bool                `gorm:"not null;type:boolean;default:false"`
+	CreatedAt   time.Time           `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
+	UpdatedAt   time.Time           `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
 
 	Client oauthmodel.Client `gorm:"foreignKey:ClientID;references:ID;constraint:OnDelete:CASCADE"`
-}
-
-func (PermissionTarget) TableName() string {
-	return "edp.permission_target"
-}
-
-type Permission struct {
-	ID          user.PermissionId       `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	Code        string                  `gorm:"size:32;not null;index:permission_target_name_idx,unique"`
-	Description string                  `gorm:"size:255"`
-	TargetID    user.PermissionTargetId `gorm:"type:uuid;not null;index:permission_target_name_idx,unique"`
-	IsDeleted   bool                    `gorm:"not null;type:boolean;default:false"`
-	CreatedAt   time.Time               `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
-	UpdatedAt   time.Time               `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`
-
-	PermissionTarget PermissionTarget `gorm:"foreignKey:TargetID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 func (Permission) TableName() string {
 	return "edp.permission"
 }
 
-type RolePermission struct {
+type PermissionRole struct {
 	ID           user.RolePermissionId `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	RoleID       user.RoleId           `gorm:"type:uuid;not null;index:role_permission_idx,unique"`
 	PermissionID user.PermissionId     `gorm:"type:uuid;not null;index:role_permission_idx,unique"`
@@ -134,8 +119,8 @@ type RolePermission struct {
 	Permission Permission `gorm:"foreignKey:PermissionID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
-func (RolePermission) TableName() string {
-	return "edp.role_permission"
+func (PermissionRole) TableName() string {
+	return "edp.permission_role"
 }
 
 type LoginSession struct {

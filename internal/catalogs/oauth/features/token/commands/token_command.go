@@ -5,7 +5,8 @@ import (
 
 	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/error"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/repository/postgres"
-	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oauth"
+	oauthTypes "github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oauth"
+	userTypes "github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/user"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/uow"
 	"github.com/ory/fosite"
@@ -13,18 +14,25 @@ import (
 )
 
 type AuthorizeUtils interface {
-	LoadRequester(ctx context.Context, requestID oauth.AuthRequestId, session fosite.Session) (*fosite.Request, error)
+	LoadRequester(ctx context.Context, requestID oauthTypes.AuthRequestId, session fosite.Session) (*fosite.Request, error)
+}
+
+type UserRBACRepository interface {
+	GetUserRoles(ctx context.Context, userId userTypes.UserId, clientId oauthTypes.ClientId) ([]string, error)
+	GetUserPermissionsForClient(ctx context.Context, userId userTypes.UserId, clientId oauthTypes.ClientId) ([]string, error)
 }
 
 type TokenCommand struct {
 	Postgres       *postgres.Postgres
 	AuthorizeUtils AuthorizeUtils
+	RBACRepo       UserRBACRepository
 }
 
-func NewTokenCommand(postgres *postgres.Postgres, utilCommand AuthorizeUtils) *TokenCommand {
+func NewTokenCommand(postgres *postgres.Postgres, utilCommand AuthorizeUtils, rbacRepo UserRBACRepository) *TokenCommand {
 	return &TokenCommand{
 		Postgres:       postgres,
 		AuthorizeUtils: utilCommand,
+		RBACRepo:       rbacRepo,
 	}
 }
 
@@ -178,4 +186,24 @@ func (c *TokenCommand) RevokeRefreshToken(ctx context.Context, requestID string)
 	}
 
 	return nil
+}
+
+// Методы для добавления параметров в токен
+
+func (c *TokenCommand) GetUserRoles(ctx context.Context, userId userTypes.UserId, clientId oauthTypes.ClientId) ([]string, error) {
+	roles, err := c.RBACRepo.GetUserRoles(ctx, userId, clientId)
+	if err != nil {
+		return nil, error2.MapTokenError(err)
+	}
+
+	return roles, nil
+}
+
+func (c *TokenCommand) GetUserPermission(ctx context.Context, userId userTypes.UserId, clientId oauthTypes.ClientId) ([]string, error) {
+	permission, err := c.RBACRepo.GetUserPermissionsForClient(ctx, userId, clientId)
+	if err != nil {
+		return nil, error2.MapTokenError(err)
+	}
+
+	return permission, nil
 }

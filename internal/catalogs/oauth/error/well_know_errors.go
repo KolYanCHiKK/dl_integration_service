@@ -8,6 +8,7 @@ import (
 
 var (
 	SigningKeysNotFound = errors.New("signingKey is not found")
+	ErrDecryptKey       = errors.New("decrypt signing key is failed")
 )
 
 func MapWellKnowError(err error) error {

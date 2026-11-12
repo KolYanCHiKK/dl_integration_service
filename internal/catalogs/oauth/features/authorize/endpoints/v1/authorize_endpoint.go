@@ -7,10 +7,11 @@ import (
 
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/connection/interfaces"
 	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/error"
-	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/constants/app"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
 	"github.com/google/uuid"
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/token/jwt"
 )
 
 type AuthorizeEndpoint struct {
@@ -82,14 +83,17 @@ func (ep *AuthorizeEndpoint) handle() http.HandlerFunc {
 			authReq.GrantAudience(value)
 		}
 
-		// Добавим параметры в сессию
-		session := fosite.DefaultSession{
-			Username: sessionParams.Username,
-			Subject:  sessionParams.Subject.String(),
-			Extra:    map[string]any{app.LoginSessionExtraKey: sessionParams.SessionID},
+		// Добавим параметры в сессию fosite
+		session := &oauth2.JWTSession{
+			JWTClaims: &jwt.JWTClaims{
+				Subject: sessionParams.Subject.String(),
+			},
+			JWTHeader: &jwt.Headers{Extra: map[string]interface{}{"typ": "at+jwt"}},
+			Subject:   sessionParams.Subject.String(),
+			Username:  sessionParams.Username,
 		}
 
-		authResp, err := ep.Dependents.OAuth.NewAuthorizeResponse(r.Context(), authReq, &session)
+		authResp, err := ep.Dependents.OAuth.NewAuthorizeResponse(r.Context(), authReq, session)
 		if err != nil {
 			ep.Dependents.OAuth.WriteAuthorizeError(r.Context(), w, authReq, err)
 			return

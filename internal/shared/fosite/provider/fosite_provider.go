@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"errors"
 
 	"github.com/KolYanCHiKK/dl_integration_service/configs"
@@ -16,7 +17,11 @@ type FositeStore struct {
 	*commands2.TokenCommand
 }
 
-func NewProvider(store *FositeStore, fositeConfig *configs.FositeAuthConfig) (fosite.OAuth2Provider, error) {
+type SigningKeyProvider interface {
+	GetSigningKey(ctx context.Context) (any, error)
+}
+
+func NewProvider(store *FositeStore, fositeConfig *configs.FositeAuthConfig, signingProvider SigningKeyProvider) (fosite.OAuth2Provider, error) {
 	if len(fositeConfig.FositeGlobalSecret) < 32 {
 		err := errors.New("global secret must be at least 32 bytes")
 		logger2.CreateErrLog(err.Error(), "Ошибка создания провайдера fosite")
@@ -35,13 +40,16 @@ func NewProvider(store *FositeStore, fositeConfig *configs.FositeAuthConfig) (fo
 		EnforcePKCEForPublicClients: fositeConfig.EnforcePKCEForPublicClients,
 	}
 
+	hmacStrategy := compose.NewOAuth2HMACStrategy(cfg)
+
 	strategy := &compose.CommonStrategy{
-		CoreStrategy: compose.NewOAuth2HMACStrategy(cfg), // Токены пока непрозрачные
+		CoreStrategy: compose.NewOAuth2JWTStrategy(signingProvider.GetSigningKey, hmacStrategy, cfg),
 	}
 
 	return compose.Compose(
 		cfg, store, strategy,
 		compose.OAuth2AuthorizeExplicitFactory,
 		compose.OAuth2PKCEFactory,
+		compose.OAuth2RefreshTokenGrantFactory,
 	), nil
 }

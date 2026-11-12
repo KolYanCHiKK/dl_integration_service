@@ -21,6 +21,13 @@ func Uniq(in []string) []string {
 	return out
 }
 
+func NonNil(v []string) []string {
+	if v == nil {
+		return []string{}
+	}
+	return v
+}
+
 func GetClientIP(r *http.Request, trustedProxies []netip.Prefix) string {
 	remote, err := netip.ParseAddrPort(r.RemoteAddr)
 	if err != nil {

@@ -6,10 +6,12 @@ import (
 	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/error"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/mappings"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/repository/postgres"
+	"github.com/KolYanCHiKK/dl_integration_service/pkg/crypt/ecdsa"
 )
 
 type JWKCommand struct {
 	Postgres *postgres.Postgres
+	cipher   *ecdsa.CipherEcdsa
 }
 
 func NewJWKCommand(postgres *postgres.Postgres) *JWKCommand {

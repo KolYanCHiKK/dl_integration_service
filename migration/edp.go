@@ -22,8 +22,7 @@ func CreateEdpTables(db *gorm.DB) error {
 		// Проводим автомиграцию
 		if err := tx.AutoMigrate(
 			&user.User{}, &user.Role{}, &user.UserRole{}, &user.ClientRole{},
-			&user.PermissionTarget{}, &user.Permission{}, &user.Department{}, &user.LoginSession{},
-			&user.LoginRequest{},
+			&user.Permission{}, &user.PermissionRole{}, &user.Department{}, &user.LoginSession{}, &user.LoginRequest{},
 
 			&models.Client{}, &models.ClientRedirectURI{}, &models.ClientPostLogoutRedirectURI{},
 			&models.ClientGrantType{}, &models.ClientResponseType{}, &models.ClientScope{},
@@ -50,8 +49,7 @@ func DropEdpTables(db *gorm.DB) error {
 
 		if err := tx.Migrator().DropTable(
 			&user.User{}, &user.Role{}, &user.UserRole{}, &user.ClientRole{},
-			&user.PermissionTarget{}, &user.Permission{}, &user.Department{}, &user.LoginSession{},
-			&user.LoginRequest{},
+			&user.Permission{}, &user.PermissionRole{}, &user.Department{}, &user.LoginSession{}, &user.LoginRequest{},
 
 			&models.Client{}, &models.ClientRedirectURI{}, &models.ClientPostLogoutRedirectURI{},
 			&models.ClientGrantType{}, &models.ClientResponseType{}, &models.ClientScope{},

@@ -77,3 +77,21 @@ func NewGenerateSigningKey(cipher *CipherEcdsa) (*GeneratedSigningKey, error) {
 		PrivateKeyEnc: enc,
 	}, nil
 }
+
+func DecryptSigningKey(c *CipherEcdsa, enc []byte, kid string) (*ecdsa.PrivateKey, error) {
+	der, err := c.Decrypt(enc, []byte(kid))
+	if err != nil {
+		return nil, fmt.Errorf("decrypt private key: %w", err)
+	}
+
+	key, err := x509.ParsePKCS8PrivateKey(der)
+	if err != nil {
+		return nil, fmt.Errorf("parse private key: %w", err)
+	}
+
+	priv, ok := key.(*ecdsa.PrivateKey)
+	if !ok {
+		return nil, fmt.Errorf("unexpected key type %T", key)
+	}
+	return priv, nil
+}

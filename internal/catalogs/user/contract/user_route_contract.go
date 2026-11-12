@@ -15,11 +15,15 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func InitUserHandlers(mux *chi.Mux, database *postgres2.Db, authConfig *configs.AuthJwtConfig, networkConfig *configs.NetworkConfig) *logger.DefaultErrorLogsParams {
+type UserComponent struct {
+	PostgresRepository *postgres.Postgres
+}
+
+func InitUserHandlers(mux *chi.Mux, database *postgres2.Db, authConfig *configs.AuthJwtConfig, networkConfig *configs.NetworkConfig) (*UserComponent, *logger.DefaultErrorLogsParams) {
 	// Валидаторы
 	validate, err := validation.NewRestRequesterValidator([]string{"phone"})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Репозиторий
@@ -46,5 +50,7 @@ func InitUserHandlers(mux *chi.Mux, database *postgres2.Db, authConfig *configs.
 		Command: logoutUserCommand,
 	})
 
-	return nil
+	return &UserComponent{
+		PostgresRepository: userPostgresRepository,
+	}, nil
 }

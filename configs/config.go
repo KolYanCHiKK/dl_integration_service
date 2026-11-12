@@ -46,6 +46,7 @@ type AuthJwtConfig struct {
 	Issuer              string        // Система, которая выпустила токен
 	JWKEncKey           string        // Ключ шифрования для JWK
 	JWKRotationInterval time.Duration // Срок ротации для JWK из retiring в retired
+	JWKReloadCacheTTL   time.Duration // Срок жизни в памяти кэша JWK ключа
 }
 
 type FositeAuthConfig struct {
@@ -127,6 +128,7 @@ func (a *AuthJwtConfig) RunAuthConfigWithEnv() error {
 		Issuer:              r.str("JWT_ISSUER"),
 		JWKEncKey:           r.str("JWK_ENC_KEY"),
 		JWKRotationInterval: r.duration("JWK_ROTATION_INTERVAL"),
+		JWKReloadCacheTTL:   r.duration("JWK_RELOAD_CACHE_TTL"),
 	}
 
 	if r.err != nil {
