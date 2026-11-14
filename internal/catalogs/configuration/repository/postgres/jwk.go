@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/error"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/mappings"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/models"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/constants/oauth"
@@ -26,11 +28,28 @@ func (p *Postgres) RotateSigningKey(ctx context.Context, tx *gorm.DB, retireAfte
 	rotatedAt := time.Now().UTC()
 	err := tx.WithContext(ctx).Where("status = ? AND is_deleted = false", oauth.SigningKeyStatusActive).
 		Updates(models.SigningKey{
-			Status:      oauth.SigningKeyStatusRetiring,
+			Status:      oauth.SigningKeyStatusRetired,
 			RotatedAt:   &rotatedAt,
 			RetireAfter: &retireAfter,
 		}).Error
 
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Postgres) CheckActiveJWKSigningKey(ctx context.Context) error {
+	var signingKeyActive models.SigningKey
+
+	err := p.WithContext(ctx).
+		Where("status = ? AND not_before <= ? AND is_deleted = false", oauth.SigningKeyStatusActive, time.Now().UTC()).
+		First(&signingKeyActive).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return error2.JwkActiveIsNotFound
+	}
 	if err != nil {
 		return err
 	}

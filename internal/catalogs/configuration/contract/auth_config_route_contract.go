@@ -1,6 +1,8 @@
 package contract
 
 import (
+	"context"
+
 	"github.com/KolYanCHiKK/dl_integration_service/configs"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/features/jwkcreate/commands"
 	createjwksv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/features/jwkcreate/endpoints/v1"
@@ -17,6 +19,15 @@ func InitConfigurationHandlers(mux *chi.Mux, database *postgres2.Db, authConfig 
 
 	// Создаем комманды
 	createJWKCommand := commands.NewJWKCreateCommand(configurationRepository, cipher)
+
+	// Проверяем существуют ли активные JWK ключи
+	err := createJWKCommand.BootstrapJWKAuth(context.Background(), authConfig.JWKRotationInterval)
+	if err != nil {
+		return &logger.DefaultErrorLogsParams{
+			Error: err,
+			Info:  "Ошибка подключения активной конфигурации JWK",
+		}
+	}
 
 	// Инициализация хендлеров
 	createjwksv1.NewJWKCreateHandler(mux, &createjwksv1.JWKCreateHandlerDeps{

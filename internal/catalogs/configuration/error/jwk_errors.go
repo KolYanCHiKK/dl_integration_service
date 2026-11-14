@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	JwkIsNotCripted = errors.New("jwk crypted is failed")
+	JwkIsNotCripted     = errors.New("jwk crypted is failed")
+	JwkActiveIsNotFound = errors.New("active jwk is not found")
 )
 
 func MapJWKErrors(err error) error {

@@ -24,13 +24,15 @@ const (
 )
 
 type PrettyFormatter struct {
-	ShowTimestamp bool
+	ShowTime         bool
+	ShowTimeWithDate bool
 }
 
 func InitLogger() {
 	log.SetOutput(os.Stdout)
 	log.SetFormatter(&PrettyFormatter{
-		ShowTimestamp: true,
+		ShowTime:         false,
+		ShowTimeWithDate: true,
 	})
 
 	log.SetLevel(log.DebugLevel)
@@ -40,8 +42,12 @@ func (f *PrettyFormatter) Format(entry *log.Entry) ([]byte, error) {
 	var b strings.Builder
 
 	// Время
-	if f.ShowTimestamp {
+	if f.ShowTime {
 		b.WriteString(entry.Time.Format("15:04:05"))
+		b.WriteString("  ")
+	}
+	if f.ShowTimeWithDate {
+		b.WriteString(entry.Time.Format("2006/01/02 15:04:05"))
 		b.WriteString("  ")
 	}
 

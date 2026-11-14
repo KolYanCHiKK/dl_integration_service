@@ -17,7 +17,7 @@ func (p *Postgres) GetJWKSigningKey(ctx context.Context) ([]datatypes.JSON, erro
 
 	err := p.WithContext(ctx).Model(&models.SigningKey{}).
 		Where("(status = ? OR (status = ? AND retire_after > now())) AND is_deleted = false",
-			oauth.SigningKeyStatusActive, oauth.SigningKeyStatusRetiring).
+			oauth.SigningKeyStatusActive, oauth.SigningKeyStatusRetired).
 		Order("not_before DESC").Pluck("public_jwk", &signingKeysJSON).Error
 
 	if err != nil {

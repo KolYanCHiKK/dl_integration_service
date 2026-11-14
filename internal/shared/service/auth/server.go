@@ -56,14 +56,14 @@ func StartOauthServer(mux *chi.Mux, database *postgres.Db, applicationConfig *co
 		return errLoggerParams
 	}
 
-	err, errInfo := contract2.InitOauthHandlers(mux, database, applicationConfig.OauthFosite, applicationConfig.JWTAuth, sessionCipher, jwkCipher, userComponent.PostgresRepository)
-	if err != nil {
-		return &logger2.DefaultErrorLogsParams{Error: err, Info: errInfo}
-	}
-
 	errLoggerParams = contract3.InitConfigurationHandlers(mux, database, applicationConfig.JWTAuth, jwkCipher)
 	if errLoggerParams != nil {
 		return errLoggerParams
+	}
+
+	err, errInfo := contract2.InitOauthHandlers(mux, database, applicationConfig.OauthFosite, applicationConfig.JWTAuth, sessionCipher, jwkCipher, userComponent.PostgresRepository)
+	if err != nil {
+		return &logger2.DefaultErrorLogsParams{Error: err, Info: errInfo}
 	}
 
 	return nil

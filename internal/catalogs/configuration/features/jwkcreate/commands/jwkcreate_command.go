@@ -3,12 +3,14 @@ package commands
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
 
 	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/error"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/mappings"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/repository/postgres"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/crypt/ecdsa"
+	"github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/uow"
 	"gorm.io/gorm"
 )
@@ -23,6 +25,7 @@ func NewJWKCreateCommand(postgres *postgres.Postgres, cipher *ecdsa.CipherEcdsa)
 		Postgres: postgres,
 		Cipher:   cipher,
 	}
+
 }
 
 func (c *JWKCreateCommand) RotateJWKSigningKey(ctx context.Context, rotatedInterval time.Duration) (*mappings.SigningKeyDTOParams, error) {
@@ -59,4 +62,21 @@ func (c *JWKCreateCommand) RotateJWKSigningKey(ctx context.Context, rotatedInter
 	}
 
 	return signingParams, nil
+}
+
+func (c *JWKCreateCommand) BootstrapJWKAuth(ctx context.Context, rotatedInterval time.Duration) error {
+	err := c.Postgres.CheckActiveJWKSigningKey(ctx)
+
+	if errors.Is(err, error2.JwkActiveIsNotFound) {
+		logger.CreateInfoLog(nil, "Отсутсвует активный JWK ключ, поэтому будет создан новый")
+
+		_, err := c.RotateJWKSigningKey(ctx, rotatedInterval)
+		if err != nil {
+			return error2.MapJWKErrors(err)
+		}
+	} else if err != nil {
+		return error2.MapJWKErrors(err)
+	}
+
+	return nil
 }
