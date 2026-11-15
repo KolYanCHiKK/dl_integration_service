@@ -17,14 +17,13 @@ import (
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/repository/postgres"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/fosite/provider"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/crypt/aead"
-	"github.com/KolYanCHiKK/dl_integration_service/pkg/crypt/ecdsa"
 	logger2 "github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
 	postgres2 "github.com/KolYanCHiKK/dl_integration_service/pkg/postgres"
 	"github.com/go-chi/chi/v5"
 )
 
 func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *configs.FositeAuthConfig, authConfig *configs.AuthJwtConfig,
-	sessionCipher *aead.Cipher, jwkCipher *ecdsa.CipherEcdsa, rbacRepo commands2.UserRBACRepository) (error, string) {
+	sessionCipher *aead.Cipher, signingKeyCache cache.SigningKeyLoadKeyCacheImplementation, rbacRepo commands2.UserRBACRepository) (error, string) {
 
 	// Создаем репозиторий
 	oauthPostgresRepository := postgres.NewPostgres(database)
@@ -37,13 +36,7 @@ func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *confi
 	openIDCommand := commands5.NewOpenIDCommand(oauthPostgresRepository)
 
 	// Подготоавливаем кеш для SigningKeyProvider
-	loadKeyCommand, err := commands6.PrepareSigningKeyProviderCache(
-		&cache.JWKCacheDependents{
-			Postgres:    oauthPostgresRepository,
-			CipherEcdsa: jwkCipher,
-		},
-		authConfig,
-	)
+	loadKeyCommand, err := commands6.PrepareSigningKeyProviderCache(signingKeyCache)
 
 	if err != nil {
 		return err, "Ошибка загрузка данных в кеш для SigningKeyProvider"

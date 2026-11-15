@@ -4,19 +4,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/KolYanCHiKK/dl_integration_service/configs"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/loadkey/cache"
 )
 
 type LoadKeyCommand struct {
-	JWKCache   *cache.SigningKeyProviderCache
-	AuthConfig *configs.AuthJwtConfig
+	JWKCache cache.SigningKeyLoadKeyCacheImplementation
 }
 
-func PrepareSigningKeyProviderCache(jwkDeps *cache.JWKCacheDependents, authConfig *configs.AuthJwtConfig) (*LoadKeyCommand, error) {
-	cacheReloadTTL := authConfig.JWKReloadCacheTTL
-	signingKeyCache := cache.NewSigningKeyProviderCache(jwkDeps, cacheReloadTTL, nil, time.Now().UTC())
-
+func PrepareSigningKeyProviderCache(signingKeyCache cache.SigningKeyLoadKeyCacheImplementation) (*LoadKeyCommand, error) {
 	loadCommand := &LoadKeyCommand{
 		JWKCache: signingKeyCache,
 	}
@@ -29,12 +24,12 @@ func PrepareSigningKeyProviderCache(jwkDeps *cache.JWKCacheDependents, authConfi
 	return loadCommand, nil
 }
 
-// Пока работаем в одном инстансе, поэтому и кэш только в воркере. При масшабировании поменяем
+// Пока работаем в одном инстансе, поэтому и кэш только в воркере. При масшабировании поменяем на Redis
 
 func (c *LoadKeyCommand) GetSigningKey(ctx context.Context) (any, error) {
-	key, loadedAt := c.JWKCache.GetCurrentAndLoadedAt()
+	key, loadedAt, ttl := c.JWKCache.Get()
 
-	if key == nil || loadedAt.Add(c.JWKCache.Ttl).Before(time.Now().UTC()) {
+	if key == nil || loadedAt.Add(ttl).Before(time.Now().UTC()) {
 		newKey, err := c.JWKCache.ReloadCache(ctx)
 		if err != nil {
 			return nil, err

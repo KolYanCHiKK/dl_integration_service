@@ -8,6 +8,7 @@ import (
 	contract3 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/contract"
 	contract2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/contract"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/user/contract"
+	cachecontract "github.com/KolYanCHiKK/dl_integration_service/internal/shared/cache/contract"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/crypt/aead"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/crypt/ecdsa"
 	logger2 "github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
@@ -51,17 +52,26 @@ func StartOauthServer(mux *chi.Mux, database *postgres.Db, applicationConfig *co
 		}
 	}
 
+	// Инициализируем кэш
+	serverInMemoryCache, err := cachecontract.PrepareAppCache(database, applicationConfig.JWTAuth, jwkCipher)
+	if err != nil {
+		return &logger2.DefaultErrorLogsParams{
+			Error: err,
+			Info:  "Ошибка инициализации объектов кэширования",
+		}
+	}
+
 	userComponent, errLoggerParams := contract.InitUserHandlers(mux, database, applicationConfig.JWTAuth, applicationConfig.Network)
 	if errLoggerParams != nil {
 		return errLoggerParams
 	}
 
-	errLoggerParams = contract3.InitConfigurationHandlers(mux, database, applicationConfig.JWTAuth, jwkCipher)
+	errLoggerParams = contract3.InitConfigurationHandlers(mux, database, applicationConfig.JWTAuth, jwkCipher, serverInMemoryCache.SigningKey)
 	if errLoggerParams != nil {
 		return errLoggerParams
 	}
 
-	err, errInfo := contract2.InitOauthHandlers(mux, database, applicationConfig.OauthFosite, applicationConfig.JWTAuth, sessionCipher, jwkCipher, userComponent.PostgresRepository)
+	err, errInfo := contract2.InitOauthHandlers(mux, database, applicationConfig.OauthFosite, applicationConfig.JWTAuth, sessionCipher, serverInMemoryCache.SigningKey, userComponent.PostgresRepository)
 	if err != nil {
 		return &logger2.DefaultErrorLogsParams{Error: err, Info: errInfo}
 	}

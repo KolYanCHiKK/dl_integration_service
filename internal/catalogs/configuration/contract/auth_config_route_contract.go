@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/KolYanCHiKK/dl_integration_service/configs"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/features/jwkcreate/cache"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/features/jwkcreate/commands"
 	createjwksv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/features/jwkcreate/endpoints/v1"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/repository/postgres"
@@ -13,12 +14,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func InitConfigurationHandlers(mux *chi.Mux, database *postgres2.Db, authConfig *configs.AuthJwtConfig, cipher *ecdsa.CipherEcdsa) *logger.DefaultErrorLogsParams {
+func InitConfigurationHandlers(mux *chi.Mux, database *postgres2.Db, authConfig *configs.AuthJwtConfig,
+	cipher *ecdsa.CipherEcdsa, signingKeyCache cache.SigningKeyJWKCreateCacheImplementation) *logger.DefaultErrorLogsParams {
+
 	// Создаем репозиторий
 	configurationRepository := postgres.NewPostgres(database)
 
 	// Создаем комманды
-	createJWKCommand := commands.NewJWKCreateCommand(configurationRepository, cipher)
+	createJWKCommand := commands.NewJWKCreateCommand(configurationRepository, cipher, signingKeyCache)
 
 	// Проверяем существуют ли активные JWK ключи
 	err := createJWKCommand.BootstrapJWKAuth(context.Background(), authConfig.JWKRotationInterval)

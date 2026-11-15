@@ -7,6 +7,7 @@ import (
 	"time"
 
 	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/error"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/features/jwkcreate/cache"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/mappings"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/configuration/repository/postgres"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/crypt/ecdsa"
@@ -16,14 +17,16 @@ import (
 )
 
 type JWKCreateCommand struct {
-	Postgres *postgres.Postgres
-	Cipher   *ecdsa.CipherEcdsa
+	Postgres        *postgres.Postgres
+	Cipher          *ecdsa.CipherEcdsa
+	SigningKeyCache cache.SigningKeyJWKCreateCacheImplementation
 }
 
-func NewJWKCreateCommand(postgres *postgres.Postgres, cipher *ecdsa.CipherEcdsa) *JWKCreateCommand {
+func NewJWKCreateCommand(postgres *postgres.Postgres, cipher *ecdsa.CipherEcdsa, signingKeyCache cache.SigningKeyJWKCreateCacheImplementation) *JWKCreateCommand {
 	return &JWKCreateCommand{
-		Postgres: postgres,
-		Cipher:   cipher,
+		Postgres:        postgres,
+		Cipher:          cipher,
+		SigningKeyCache: signingKeyCache,
 	}
 
 }
@@ -61,6 +64,11 @@ func (c *JWKCreateCommand) RotateJWKSigningKey(ctx context.Context, rotatedInter
 		return nil, error2.MapJWKErrors(err)
 	}
 
+	_, err = c.SigningKeyCache.ReloadCache(ctx)
+	if err != nil {
+		return nil, error2.MapJWKErrors(err)
+	}
+
 	return signingParams, nil
 }
 
@@ -68,7 +76,7 @@ func (c *JWKCreateCommand) BootstrapJWKAuth(ctx context.Context, rotatedInterval
 	err := c.Postgres.CheckActiveJWKSigningKey(ctx)
 
 	if errors.Is(err, error2.JwkActiveIsNotFound) {
-		logger.CreateInfoLog(nil, "Отсутсвует активный JWK ключ, поэтому будет создан новый")
+		logger.CreateOperationLogs("create_active_jwk")
 
 		_, err := c.RotateJWKSigningKey(ctx, rotatedInterval)
 		if err != nil {
