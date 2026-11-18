@@ -89,7 +89,7 @@ func (p *Postgres) CreateRefreshToken(tx *gorm.DB, ctx context.Context, requestI
 		Active:        true,
 		RequestID:     requestId,
 		AccessTokenId: &accessToken.ID,
-		FirstUsedAt:   nil,
+		UsedAt:        nil,
 	}
 
 	err = tx.WithContext(ctx).Create(&token).Error
@@ -156,12 +156,12 @@ func (p *Postgres) RotateRefreshToken(tx *gorm.DB, ctx context.Context, fositeRe
 		return accessTokenRes.Error
 	}
 
-	// Помечаем refresh-токен использованным (first_used_at ставится один раз)
+	// Помечаем refresh-токен использованным (used_at ставится один раз)
 	res := tx.WithContext(ctx).
 		Model(&models.RefreshToken{}).Where("signature = ? AND active = true", signature).
 		Updates(map[string]any{
-			"active":        false,
-			"first_used_at": gorm.Expr("COALESCE(first_used_at, NOW())"),
+			"active":  false,
+			"used_at": gorm.Expr("COALESCE(used_at, NOW())"),
 		})
 
 	if res.Error != nil {
@@ -172,4 +172,24 @@ func (p *Postgres) RotateRefreshToken(tx *gorm.DB, ctx context.Context, fositeRe
 	}
 
 	return nil
+}
+
+func (p *Postgres) IsLoginSessionActiveByRequest(ctx context.Context, fositeRequestId string) (bool, error) {
+	var countLoginSessionRaws int64
+
+	err := p.WithContext(ctx).Table("edp.oauth_request AS o").
+		Joins("JOIN edp.login_session AS ls ON ls.id = o.login_session_id").
+		Joins(`JOIN edp."user" AS u ON u.id = ls.user_id`).
+		Where("o.fosite_request_id = ?", fositeRequestId).
+		Where("ls.expires_at > now() AND ls.revoked_at IS NULL AND ls.is_deleted = false").
+		Where("u.is_deleted = false").Count(&countLoginSessionRaws).Error
+
+	if err != nil {
+		return false, err
+	}
+	if countLoginSessionRaws == 0 {
+		return false, error2.LoginSessionNotFound
+	}
+
+	return true, nil
 }

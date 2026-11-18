@@ -1,12 +1,14 @@
 package v1
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/url"
 
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/connection/interfaces"
 	error2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/error"
+	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/constants/app"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
 	"github.com/google/uuid"
 	"github.com/ory/fosite"
@@ -93,13 +95,15 @@ func (ep *AuthorizeEndpoint) handle() http.HandlerFunc {
 			Username:  sessionParams.Username,
 		}
 
-		authResp, err := ep.Dependents.OAuth.NewAuthorizeResponse(r.Context(), authReq, session)
+		ctx := context.WithValue(r.Context(), app.SessionIDContextKey, &sessionParams.SessionID)
+
+		authResp, err := ep.Dependents.OAuth.NewAuthorizeResponse(ctx, authReq, session)
 		if err != nil {
-			ep.Dependents.OAuth.WriteAuthorizeError(r.Context(), w, authReq, err)
+			ep.Dependents.OAuth.WriteAuthorizeError(ctx, w, authReq, err)
 			return
 		}
 
-		ep.Dependents.OAuth.WriteAuthorizeResponse(r.Context(), w, authReq, authResp)
+		ep.Dependents.OAuth.WriteAuthorizeResponse(ctx, w, authReq, authResp)
 	}
 }
 

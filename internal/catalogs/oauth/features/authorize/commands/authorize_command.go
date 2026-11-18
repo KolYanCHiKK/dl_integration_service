@@ -123,7 +123,7 @@ func (c *AuthorizeCommand) CreateAuthorizeCodeSession(ctx context.Context, signa
 		return err
 	}
 
-	mappedRequest, err := mappings.MapFositeRequestToDatabaseRequest(req)
+	mappedRequest, err := mappings.MapFositeRequestToDatabaseRequest(ctx, req)
 	if err != nil {
 		return error2.MapSessionError(err)
 	}
@@ -180,7 +180,7 @@ func (c *AuthorizeCommand) CreatePKCERequestSession(ctx context.Context, signatu
 		method = "plain"
 	}
 
-	mapped, err := mappings.MapFositeRequestToDatabaseRequest(req)
+	mapped, err := mappings.MapFositeRequestToDatabaseRequest(ctx, req)
 	if err != nil {
 		return error2.MapSessionError(err)
 	}

@@ -33,6 +33,13 @@ func (ep *TokenEndpoint) handle() http.HandlerFunc {
 			return
 		}
 
+		// Проверяем сессию авторизации пользователя
+		isLoginSessionValid, err := ep.Dependents.Command.CheckLoginSessionActiveByRequest(r.Context(), tokenReq.GetID())
+		if isLoginSessionValid != true || err != nil {
+			ep.createMismatchingTypeResponse(w, r, tokenReq, err)
+			return
+		}
+
 		userId, err := uuid.Parse(tokenReq.GetSession().GetSubject())
 		if err != nil {
 			ep.createMismatchingTypeResponse(w, r, tokenReq, err)
@@ -44,19 +51,22 @@ func (ep *TokenEndpoint) handle() http.HandlerFunc {
 			return
 		}
 
+		// При Refresh просходи клонирование, поэтому записываем именно в объект их fosite запроса
+		sessionInRequest := tokenReq.GetSession().(*custom.Session)
+
 		// Добавляем роли и пермишены в токен
-		session.Roles, err = ep.Dependents.Command.GetUserRoles(r.Context(), userId, clientId)
+		sessionInRequest.Roles, err = ep.Dependents.Command.GetUserRoles(r.Context(), userId, clientId)
 		if err != nil {
 			ep.createErrorGeneratingResponse(w, r, tokenReq, err)
 			return
 		}
-		session.Permissions, err = ep.Dependents.Command.GetUserPermission(r.Context(), userId, clientId)
+		sessionInRequest.Permissions, err = ep.Dependents.Command.GetUserPermission(r.Context(), userId, clientId)
 		if err != nil {
 			ep.createErrorGeneratingResponse(w, r, tokenReq, err)
 			return
 		}
 
-		session.ClientId = clientId
+		sessionInRequest.ClientId = clientId
 
 		// Формируем ответ
 		tokenResp, err := ep.Dependents.OAuth.NewAccessResponse(r.Context(), tokenReq)
@@ -71,7 +81,10 @@ func (ep *TokenEndpoint) handle() http.HandlerFunc {
 
 func (ep *TokenEndpoint) createMismatchingTypeResponse(w http.ResponseWriter, r *http.Request, tokenReq fosite.AccessRequester, err error) {
 	logger.CreateErrLog(err.Error(), "Ошибка валидации пользовательских данных в сессии запроса")
-	ep.Dependents.OAuth.WriteAccessError(r.Context(), w, tokenReq, err)
+	ep.Dependents.OAuth.WriteAccessError(r.Context(), w, tokenReq,
+		fosite.ErrInvalidGrant.
+			WithDescription("The user data of this grant is invalid.").WithWrap(err),
+	)
 	return
 }
 

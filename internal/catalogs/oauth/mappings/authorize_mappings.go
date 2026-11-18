@@ -1,15 +1,14 @@
 package mappings
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/models"
-	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/constants/app"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oauth"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/user"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/utils"
-	"github.com/google/uuid"
 	"github.com/ory/fosite"
 	"gorm.io/datatypes"
 )
@@ -74,7 +73,7 @@ type FositeRequestToDatabaseRequest struct {
 	GrantedAudience []string
 }
 
-func MapFositeRequestToDatabaseRequest(fr fosite.Requester) (*FositeRequestToDatabaseRequest, error) {
+func MapFositeRequestToDatabaseRequest(ctx context.Context, fr fosite.Requester) (*FositeRequestToDatabaseRequest, error) {
 	jsonForm, err := json.Marshal(fr.GetRequestForm())
 	if err != nil {
 		return nil, err
@@ -90,10 +89,8 @@ func MapFositeRequestToDatabaseRequest(fr fosite.Requester) (*FositeRequestToDat
 	grantedAudience := utils.Uniq(fr.GetGrantedAudience())
 
 	var loginSessionID *user.LoginSessionId
-	if mappedSession, ok := fr.GetSession().(*fosite.DefaultSession); ok {
-		if uuidSid, ok := mappedSession.Extra[app.LoginSessionExtraKey].(uuid.UUID); ok {
-			loginSessionID = &uuidSid
-		}
+	if sessionId, ok := ctx.Value("sessionId").(*user.LoginSessionId); ok {
+		loginSessionID = sessionId
 	}
 
 	return &FositeRequestToDatabaseRequest{

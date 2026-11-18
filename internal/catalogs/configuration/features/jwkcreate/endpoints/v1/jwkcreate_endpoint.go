@@ -22,7 +22,7 @@ func (ep *JWKCreateEndpoint) MapEndpoint() {
 
 func (ep *JWKCreateEndpoint) handle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		signingKeyParams, err := ep.Dependents.Command.RotateJWKSigningKey(r.Context(), ep.Dependents.AuthConfig.JWKRotationInterval)
+		signingKeyParams, err := ep.Dependents.Command.RotateJWKSigningKey(r.Context(), ep.Dependents.AuthConfig.AccessTokenTTL)
 		if err != nil {
 			rest.GenerateInternalServerErrorResponse(w, nil, err.Error())
 			return

@@ -188,6 +188,16 @@ func (c *TokenCommand) RevokeRefreshToken(ctx context.Context, requestID string)
 	return nil
 }
 
+// Метод для валидации пользовательской сессии
+func (c *TokenCommand) CheckLoginSessionActiveByRequest(ctx context.Context, fositeRequestId string) (bool, error) {
+	isValid, err := c.Postgres.IsLoginSessionActiveByRequest(ctx, fositeRequestId)
+	if err != nil {
+		return false, error2.MapTokenError(err)
+	}
+
+	return isValid, nil
+}
+
 // Методы для добавления параметров в токен
 
 func (c *TokenCommand) GetUserRoles(ctx context.Context, userId userTypes.UserId, clientId oauthTypes.ClientId) ([]string, error) {

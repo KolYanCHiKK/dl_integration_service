@@ -86,7 +86,7 @@ func (AccessToken) TableName() string { return "edp.access_token" }
 type RefreshToken struct {
 	TokenRecord   `gorm:"embedded"`
 	AccessTokenId *oauth.TokenId      `gorm:"type:uuid;index"`        // access token, выданный вместе с refresh (нужен при rotation)
-	FirstUsedAt   *time.Time          `gorm:"type:timestamptz;index"` // для grace period при rotation (параллельные запросы клиента при замене refresh токена)
+	UsedAt        *time.Time          `gorm:"type:timestamptz;index"` // для аудита или в последствии для grace period при rotation (параллельные запросы клиента при замене refresh токена)
 	RequestID     oauth.AuthRequestId `gorm:"type:uuid;not null;index"`
 	CreatedAt     time.Time           `gorm:"not null;default:now();type:timestamptz;autoCreateTime"`
 	UpdatedAt     time.Time           `gorm:"not null;default:now();type:timestamptz;autoUpdateTime"`

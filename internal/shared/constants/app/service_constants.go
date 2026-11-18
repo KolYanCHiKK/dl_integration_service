@@ -14,3 +14,7 @@ const (
 const (
 	CodeChallengeAlgS256 app.CodeChallengeAlg = "S256"
 )
+
+const (
+	SessionIDContextKey = "sessionId"
+)
