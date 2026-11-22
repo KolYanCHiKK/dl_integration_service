@@ -158,11 +158,17 @@ func (c *AuthorizeCommand) GetAuthorizeCodeSession(ctx context.Context, signatur
 }
 
 func (c *AuthorizeCommand) InvalidateAuthorizeCodeSession(ctx context.Context, signature string) error {
-	err := c.Postgres.DeactivateAuthorizeCode(ctx, signature)
+	err := uow.ExecuteTransaction(ctx, c.Postgres, func(tx *gorm.DB) error {
+		err := c.Postgres.DeactivateAuthorizeCode(tx, ctx, signature)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
 	if err != nil {
 		return error2.MapSessionError(err)
 	}
-
 	return nil
 }
 
@@ -211,11 +217,17 @@ func (c *AuthorizeCommand) GetPKCERequestSession(ctx context.Context, signature 
 }
 
 func (c *AuthorizeCommand) DeletePKCERequestSession(ctx context.Context, signature string) error {
-	err := c.Postgres.DeletePKCERequest(ctx, signature)
+	err := uow.ExecuteTransaction(ctx, c.Postgres, func(tx *gorm.DB) error {
+		err := c.Postgres.DeletePKCERequest(tx, ctx, signature)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
 	if err != nil {
 		return error2.MapSessionError(err)
 	}
-
 	return nil
 }
 
@@ -316,12 +328,23 @@ func (c *AuthorizeCommand) LoadRequester(ctx context.Context, requestID oauth.Au
 }
 
 func (c *AuthorizeCommand) CreateLoginRequest(ctx context.Context, redirectLoginURI string, loginRequestTTL time.Duration) (*user.LoginRequestId, error) {
-	expiresAt := time.Now().UTC().Add(loginRequestTTL)
-	loginRequestId, err := c.Postgres.CreateLoginRequest(ctx, redirectLoginURI, expiresAt)
+	var (
+		expiresAt      = time.Now().UTC().Add(loginRequestTTL)
+		loginRequestId *user.LoginRequestId
+	)
+
+	err := uow.ExecuteTransaction(ctx, c.Postgres, func(tx *gorm.DB) error {
+		loginRequestIdOutTx, err := c.Postgres.CreateLoginRequest(tx, ctx, redirectLoginURI, expiresAt)
+		if err != nil {
+			return err
+		}
+		loginRequestId = loginRequestIdOutTx
+		return nil
+	})
+
 	if err != nil {
 		return nil, error2.MapSessionError(err)
 	}
-
 	return loginRequestId, nil
 }
 

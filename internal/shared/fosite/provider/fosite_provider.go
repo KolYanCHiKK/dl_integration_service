@@ -13,6 +13,8 @@ import (
 )
 
 type FositeStore struct {
+	*Transactional
+
 	*commands.AuthorizeCommand
 	*commands2.TokenCommand
 }

@@ -40,8 +40,8 @@ func (p *Postgres) GetAccessToken(ctx context.Context, signature string) (*model
 	return &accessToken, nil
 }
 
-func (p *Postgres) DeactivateAccessToken(ctx context.Context, signature string) error {
-	res := p.WithContext(ctx).Model(&models.AccessToken{}).
+func (p *Postgres) DeactivateAccessToken(tx *gorm.DB, ctx context.Context, signature string) error {
+	res := tx.WithContext(ctx).Model(&models.AccessToken{}).
 		Where("signature = ?", signature).Update("active", false)
 
 	if res.Error != nil {
@@ -54,8 +54,8 @@ func (p *Postgres) DeactivateAccessToken(ctx context.Context, signature string) 
 	return nil
 }
 
-func (p *Postgres) RevokeAccessTokensByRequest(ctx context.Context, fositeRequestID string) error {
-	requestIDsSub := p.WithContext(ctx).Model(&models.Request{}).Select("id").
+func (p *Postgres) RevokeAccessTokensByRequest(tx *gorm.DB, ctx context.Context, fositeRequestID string) error {
+	requestIDsSub := tx.WithContext(ctx).Model(&models.Request{}).Select("id").
 		Where("fosite_request_id = ?", fositeRequestID)
 
 	res := p.WithContext(ctx).
@@ -114,8 +114,8 @@ func (p *Postgres) GetRefreshToken(ctx context.Context, signature string) (*mode
 	return &refreshToken, nil
 }
 
-func (p *Postgres) DeactivateRefreshToken(ctx context.Context, signature string) error {
-	res := p.WithContext(ctx).Model(&models.RefreshToken{}).
+func (p *Postgres) DeactivateRefreshToken(tx *gorm.DB, ctx context.Context, signature string) error {
+	res := tx.WithContext(ctx).Model(&models.RefreshToken{}).
 		Where("signature = ? AND active = true", signature).Update("active", false)
 
 	if res.Error != nil {
@@ -127,11 +127,11 @@ func (p *Postgres) DeactivateRefreshToken(ctx context.Context, signature string)
 	return nil
 }
 
-func (p *Postgres) RevokeRefreshTokensByRequest(ctx context.Context, fositeRequestID string) error {
-	requestIDs := p.WithContext(ctx).Model(&models.Request{}).
+func (p *Postgres) RevokeRefreshTokensByRequest(tx *gorm.DB, ctx context.Context, fositeRequestID string) error {
+	requestIDs := tx.WithContext(ctx).Model(&models.Request{}).
 		Select("id").Where("fosite_request_id = ?", fositeRequestID)
 
-	res := p.WithContext(ctx).Model(&models.RefreshToken{}).
+	res := tx.WithContext(ctx).Model(&models.RefreshToken{}).
 		Where("request_id IN (?) AND active = true", requestIDs).Update("active", false)
 
 	// Не проверяем RowAffected = 0, так как отзыв идемпотентный и если его уже отозвали, то все ок

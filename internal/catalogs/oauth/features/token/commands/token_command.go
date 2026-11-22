@@ -87,11 +87,17 @@ func (c *TokenCommand) GetAccessTokenSession(ctx context.Context, signature stri
 }
 
 func (c *TokenCommand) DeleteAccessTokenSession(ctx context.Context, signature string) error {
-	err := c.Postgres.DeactivateAccessToken(ctx, signature)
+	err := uow.ExecuteTransaction(ctx, c.Postgres, func(tx *gorm.DB) error {
+		err := c.Postgres.DeactivateAccessToken(tx, ctx, signature)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
 	if err != nil {
 		return error2.MapTokenError(err)
 	}
-
 	return nil
 }
 
@@ -146,7 +152,14 @@ func (c *TokenCommand) GetRefreshTokenSession(ctx context.Context, signature str
 }
 
 func (c *TokenCommand) DeleteRefreshTokenSession(ctx context.Context, signature string) error {
-	err := c.Postgres.DeactivateRefreshToken(ctx, signature)
+	err := uow.ExecuteTransaction(ctx, c.Postgres, func(tx *gorm.DB) error {
+		err := c.Postgres.DeactivateRefreshToken(tx, ctx, signature)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
 	if err != nil {
 		return error2.MapTokenError(err)
 	}
@@ -171,20 +184,32 @@ func (c *TokenCommand) RotateRefreshToken(ctx context.Context, requestID string,
 }
 
 func (c *TokenCommand) RevokeAccessToken(ctx context.Context, requestID string) error {
-	err := c.Postgres.RevokeAccessTokensByRequest(ctx, requestID)
+	err := uow.ExecuteTransaction(ctx, c.Postgres, func(tx *gorm.DB) error {
+		err := c.Postgres.RevokeAccessTokensByRequest(tx, ctx, requestID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
 	if err != nil {
 		return error2.MapTokenError(err)
 	}
-
 	return nil
 }
 
 func (c *TokenCommand) RevokeRefreshToken(ctx context.Context, requestID string) error {
-	err := c.Postgres.RevokeRefreshTokensByRequest(ctx, requestID)
+	err := uow.ExecuteTransaction(ctx, c.Postgres, func(tx *gorm.DB) error {
+		err := c.Postgres.RevokeRefreshTokensByRequest(tx, ctx, requestID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
 	if err != nil {
 		return error2.MapTokenError(err)
 	}
-
 	return nil
 }
 

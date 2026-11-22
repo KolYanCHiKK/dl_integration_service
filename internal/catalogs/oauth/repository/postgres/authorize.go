@@ -342,9 +342,8 @@ func (p *Postgres) GetRequestResources(ctx context.Context, requestId oauth.Auth
 	return resourceNames, nil // Отсуствие ресурсов не ошибка по спецификации Oauth, но в хендлере проверяем
 }
 
-func (p *Postgres) DeactivateAuthorizeCode(ctx context.Context, signature string) error {
-	res := p.
-		WithContext(ctx).
+func (p *Postgres) DeactivateAuthorizeCode(tx *gorm.DB, ctx context.Context, signature string) error {
+	res := tx.WithContext(ctx).
 		Model(&models.AuthorizeCode{}).
 		Where("signature = ?", signature).
 		Update("active", false)
@@ -359,10 +358,10 @@ func (p *Postgres) DeactivateAuthorizeCode(ctx context.Context, signature string
 	return nil
 }
 
-func (p *Postgres) DeletePKCERequest(ctx context.Context, signature string) error {
-	sub := p.WithContext(ctx).Where("signature = ?", signature).
+func (p *Postgres) DeletePKCERequest(tx *gorm.DB, ctx context.Context, signature string) error {
+	sub := tx.WithContext(ctx).Where("signature = ?", signature).
 		Model(&models.AuthorizeCode{}).Select("request_id")
-	res := p.WithContext(ctx).Where("request_id IN (?)", sub).Delete(&models.PKCERequest{})
+	res := tx.WithContext(ctx).Where("request_id IN (?)", sub).Delete(&models.PKCERequest{})
 
 	if res.Error != nil {
 		return res.Error
@@ -376,12 +375,12 @@ func (p *Postgres) DeletePKCERequest(ctx context.Context, signature string) erro
 
 // Создания запроса на авторизацию пользователем
 
-func (p *Postgres) CreateLoginRequest(ctx context.Context, redirectLoginURI string, expiresAt time.Time) (*user.LoginRequestId, error) {
+func (p *Postgres) CreateLoginRequest(tx *gorm.DB, ctx context.Context, redirectLoginURI string, expiresAt time.Time) (*user.LoginRequestId, error) {
 	var loginRequest = models2.LoginRequest{
 		RedirectURL: redirectLoginURI,
 		ExpiresAt:   expiresAt,
 	}
-	err := p.WithContext(ctx).Create(&loginRequest).Error
+	err := tx.WithContext(ctx).Create(&loginRequest).Error
 	if err != nil {
 		return nil, err
 	}

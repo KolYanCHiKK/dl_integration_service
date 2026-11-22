@@ -42,9 +42,13 @@ func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *confi
 		return err, "Ошибка загрузка данных в кеш для SigningKeyProvider"
 	}
 
+	// Подготавливаем структуру для инициализации fosite транзакций
+	transactional := &provider.Transactional{Db: database}
+
 	// Инициализация fosite
 	providerFosite, err := provider.NewProvider(
 		&provider.FositeStore{
+			Transactional:    transactional,
 			AuthorizeCommand: oauthCommand,
 			TokenCommand:     tokenCommand,
 		},
