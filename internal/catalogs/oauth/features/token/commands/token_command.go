@@ -7,6 +7,7 @@ import (
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/repository/postgres"
 	oauthTypes "github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/oauth"
 	userTypes "github.com/KolYanCHiKK/dl_integration_service/internal/shared/types/user"
+	"github.com/KolYanCHiKK/dl_integration_service/pkg/library/custom"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
 	"github.com/KolYanCHiKK/dl_integration_service/pkg/uow"
 	"github.com/ory/fosite"
@@ -68,14 +69,20 @@ func (c *TokenCommand) CreateAccessTokenSession(ctx context.Context, signature s
 }
 
 func (c *TokenCommand) GetAccessTokenSession(ctx context.Context, signature string, session fosite.Session) (fosite.Requester, error) {
+	sessionAfterRevokeCorrect := custom.SessionOrEmpty(session)
+
+	if signature == "" {
+		return nil, error2.MapTokenError(error2.AccessTokenNotFound)
+	}
+
 	token, err := c.Postgres.GetAccessToken(ctx, signature)
 	if err != nil {
 		return nil, error2.MapTokenError(err)
 	}
 
-	session.SetExpiresAt(fosite.AccessToken, token.ExpiresAt)
+	sessionAfterRevokeCorrect.SetExpiresAt(fosite.AccessToken, token.ExpiresAt)
 
-	req, err := c.AuthorizeUtils.LoadRequester(ctx, token.RequestID, session)
+	req, err := c.AuthorizeUtils.LoadRequester(ctx, token.RequestID, sessionAfterRevokeCorrect)
 	if err != nil {
 		return nil, error2.MapTokenError(err)
 	}
@@ -133,14 +140,20 @@ func (c *TokenCommand) CreateRefreshTokenSession(ctx context.Context, signature 
 }
 
 func (c *TokenCommand) GetRefreshTokenSession(ctx context.Context, signature string, session fosite.Session) (fosite.Requester, error) {
+	sessionAfterRevokeCorrect := custom.SessionOrEmpty(session)
+
+	if signature == "" {
+		return nil, error2.MapTokenError(error2.RefreshTokenNotFound)
+	}
+
 	token, err := c.Postgres.GetRefreshToken(ctx, signature)
 	if err != nil {
 		return nil, error2.MapTokenError(err)
 	}
 
-	session.SetExpiresAt(fosite.RefreshToken, token.ExpiresAt)
+	sessionAfterRevokeCorrect.SetExpiresAt(fosite.RefreshToken, token.ExpiresAt)
 
-	req, err := c.AuthorizeUtils.LoadRequester(ctx, token.RequestID, session)
+	req, err := c.AuthorizeUtils.LoadRequester(ctx, token.RequestID, sessionAfterRevokeCorrect)
 	if err != nil {
 		return nil, error2.MapTokenError(err)
 	}

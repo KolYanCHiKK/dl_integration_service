@@ -56,3 +56,15 @@ func (s *Session) Clone() fosite.Session {
 		Permissions: append([]string(nil), s.Permissions...),
 	}
 }
+
+/*
+	fosite передаёт nil при отзыве токена (/revoke) - сессия там не нужна,
+
+но так как LoadRequester должен куда-то распаковать данные, то создадим пустую
+*/
+func SessionOrEmpty(s fosite.Session) fosite.Session {
+	if s == nil {
+		return NewEmptySession()
+	}
+	return s
+}

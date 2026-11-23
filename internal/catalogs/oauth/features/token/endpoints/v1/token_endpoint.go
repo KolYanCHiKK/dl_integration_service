@@ -18,6 +18,7 @@ func NewTokenEndpoint(params *TokenHandler) interfaces.Endpoint {
 	return &TokenEndpoint{params}
 }
 
+// Выдача Access Token + замена на новый через Refresh
 func (ep *TokenEndpoint) MapEndpoint() {
 	ep.Mux.Post("/oauth2/token", ep.handle())
 }

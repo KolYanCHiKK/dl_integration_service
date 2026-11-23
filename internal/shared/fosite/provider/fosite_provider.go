@@ -53,5 +53,6 @@ func NewProvider(store *FositeStore, fositeConfig *configs.FositeAuthConfig, sig
 		compose.OAuth2AuthorizeExplicitFactory,
 		compose.OAuth2PKCEFactory,
 		compose.OAuth2RefreshTokenGrantFactory,
+		compose.OAuth2TokenRevocationFactory,
 	), nil
 }

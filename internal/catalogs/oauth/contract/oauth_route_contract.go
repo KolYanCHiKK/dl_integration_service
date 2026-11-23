@@ -12,6 +12,7 @@ import (
 	loginv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/login/endpoints/v1"
 	commands5 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/openid/commands"
 	openidv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/openid/endpoints/v1"
+	revokev1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/revoke/endpoints/v1"
 	commands2 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/token/commands"
 	tokenv1 "github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/features/token/endpoints/v1"
 	"github.com/KolYanCHiKK/dl_integration_service/internal/catalogs/oauth/repository/postgres"
@@ -83,9 +84,15 @@ func InitOauthHandlers(mux *chi.Mux, database *postgres2.Db, fositeConfig *confi
 		&jwkv1.JWKHandlerDeps{Command: jwkCommand},
 	)
 
-	openidv1.NewJOpenIDHandler(mux, &openidv1.OpenIDHandlerDeps{
+	openidv1.NewOpenIDHandler(mux, &openidv1.OpenIDHandlerDeps{
 		Command:      openIDCommand,
 		FositeConfig: fositeConfig,
+	})
+
+	revokev1.NewRevokeHandler(mux, &revokev1.RevokeHandlerDeps{
+		Command:     tokenCommand,
+		OAuth:       providerFosite,
+		OauthConfig: fositeConfig,
 	})
 
 	return nil, ""

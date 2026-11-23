@@ -16,7 +16,7 @@ type OpenIDHandlerDeps struct {
 	FositeConfig *configs.FositeAuthConfig
 }
 
-func NewJOpenIDHandler(mux *chi.Mux, deps *OpenIDHandlerDeps) {
+func NewOpenIDHandler(mux *chi.Mux, deps *OpenIDHandlerDeps) {
 	handler := &OpenIDHandler{
 		Mux:        mux,
 		Dependents: deps,

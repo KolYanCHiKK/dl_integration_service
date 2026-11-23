@@ -59,6 +59,7 @@ func (c *OpenIDCommand) GetOpenIDConfigurator(ctx context.Context, issuer string
 		Issuer:                            issuer,
 		AuthorizationEndpoint:             issuer + "/oauth2/authorize",
 		TokenEndpoint:                     issuer + "/oauth2/token",
+		RevocationEndpoint:                issuer + "/oauth2/revoke",
 		JWKSURI:                           issuer + "/oauth2/well-known/jwk.json",
 		EndSessionEndpoint:                issuer + "/users/logout",
 		ResponseTypesSupported:            responseTypesSupported,

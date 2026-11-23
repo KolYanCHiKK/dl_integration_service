@@ -5,6 +5,7 @@ import (
 
 	logger2 "github.com/KolYanCHiKK/dl_integration_service/pkg/logger"
 	"github.com/ory/fosite"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -17,10 +18,10 @@ func MapTokenError(err error) error {
 	case err == nil:
 		return nil
 	case errors.Is(err, AccessTokenNotFound):
-		logger2.CreateErrLog(err.Error(), "Access Token не был найден")
+		logger2.CreateInfoLog(log.Fields{"error": err.Error()}, "Access Token не был найден")
 		return fosite.ErrNotFound
 	case errors.Is(err, RefreshTokenNotFound):
-		logger2.CreateErrLog(err.Error(), "Refresh Token не был найден")
+		logger2.CreateInfoLog(log.Fields{"error": err.Error()}, "Refresh Token не был найден")
 		return fosite.ErrNotFound
 	default:
 		logger2.CreateErrLog(err.Error(), "Ошибка работы с Access или Refresh токеном")

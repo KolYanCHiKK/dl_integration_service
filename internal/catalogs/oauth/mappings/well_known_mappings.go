@@ -31,6 +31,7 @@ type OpenIDResponseParams struct {
 	Issuer                string
 	AuthorizationEndpoint string
 	TokenEndpoint         string
+	RevocationEndpoint    string
 	JWKSURI               string
 	EndSessionEndpoint    string
 
@@ -48,6 +49,7 @@ func MapOpenIDResponseParamsToDTO(params *OpenIDResponseParams) *dtos2.OpenIDRes
 		Issuer:                            params.Issuer,
 		AuthorizationEndpoint:             params.AuthorizationEndpoint,
 		TokenEndpoint:                     params.TokenEndpoint,
+		RevocationEndpoint:                params.RevocationEndpoint,
 		JWKSURI:                           params.JWKSURI,
 		EndSessionEndpoint:                params.EndSessionEndpoint,
 		ResponseTypesSupported:            params.ResponseTypesSupported,
